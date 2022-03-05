@@ -11,8 +11,6 @@ library(mapview)
 
 # read data ---------------------------------------------------------------
 
-66666666666 ATUALIZAR
-
 # MODIFICAR DEPOIS PARA BASE BAIXADA AOPDATA
 df_all <- readRDS("E:/JPParga/socio_acc-all.rds")
 df_car <- readRDS("E:/JPParga/socio_acc-car.rds")
@@ -27,10 +25,10 @@ df_car[, i.geometry := NULL]
 # alguns casos assim em Manaus
 
 df_pop <- df_all[
-  ano == 2019 & pop_total > 0,
+  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
   .(origin, city, cor_indigena, cor_negra, pop_total)
-] %>% 
-  dplyr::distinct()
+]
+
 # check any na
 any(is.na(df_pop))
 # check any nan -> necessary create function
@@ -39,7 +37,21 @@ is.nan.df <- function(x){
 }
 any(is.nan.df(df_pop))
 
+# create column prop negra + indigena
+df_pop[, prop_negra_indigena := (cor_indigena + cor_negra) / pop_total]
 
+# origin == "898af6bac2fffff" possui prop > 1 -> soma indigena e negro > pop total
+# PROVISORIO ABAIXO
+df_pop[prop_negra_indigena > 1]$prop_negra_indigena <- 1
+
+df_renda <- df_all[
+  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
+  .(origin, city, renda_total, renda_capita, quintil, decil)
+]
+
+df_pop_renda <- dplyr::left_join(df_pop, df_renda)
+
+66666666666 ATUALIZAR
 
 df_all_hosp <- df_all[
   ano == 2019 
@@ -47,8 +59,7 @@ df_all_hosp <- df_all[
 
 df_temp_all <- df_all[
   ano == 2019,
-  .(origin, city, mode, pico, CMASA30, CMASB30, cor_indigena, cor_negra, pop_total,
-    renda_total, renda_capita)
+  .(origin, city, mode, pico, CMASA30, CMASB30)
 ]
 
 df_temp_car <- df_car[
@@ -119,6 +130,11 @@ df_temp_all[
 
 
 # grafico -----------------------------------------------------------------
+
+# boxplot
+# discretizar a proporcao de pessoas negras dentro do hexagono (25% por 25% cada grupo)
+
+
 
 # testar colorir por quintil de renda
 
