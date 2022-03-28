@@ -80,6 +80,17 @@ aop_colors <- c(
   `ipea6`       = '#2F6280',
   `ipea7`       = '#063754',
   
+  # cleveland
+  `clevel1`       = '#FF3A3A', # red leve
+  `clevel2`       = '#8F0303', # red forte
+  `clevel3`       = '#839192', # cinza leve
+  `clevel4`       = '#515A5A', # cinza forte
+  
+  # cleveland2
+  `vclevel1`       = '#FF3A3A', # red leve
+  `vclevel2`       = '#839192', # cinza leve
+  `vclevel3`       = '#8F0303', # red forte
+  `vclevel4`       = '#515A5A', # cinza forte
   
   ### animals
   # qualitativo
@@ -117,6 +128,10 @@ aop_palettes <- list(
   `cartola`               = aop_cols(purrr::map('cartola', ~paste0(., 1:6))[[1]]),
   
   `caqui`               = aop_cols(purrr::map('caqui', ~paste0(., 1:6))[[1]]),
+  
+  `clevel`               = aop_cols(purrr::map('clevel', ~paste0(., 1:4))[[1]]),
+  
+  `vclevel`               = aop_cols(purrr::map('vclevel', ~paste0(., 1:4))[[1]]),
   
   `post`               = aop_cols(purrr::map('post', ~paste0(., 1:6))[[1]]),
   
