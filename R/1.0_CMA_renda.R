@@ -1,7 +1,4 @@
-
-
-
-# load packages ------
+# Load packages ------
 
 rm(list=ls())
 gc(reset = TRUE)
@@ -11,8 +8,10 @@ library(ggplot2)
 library(readr)
 library(sf)
 library(patchwork)
+# add style
+source('R/colours.R')
 
-# read files ------
+# Read files ------
 
 tmp_join_bus_raw <- readr::read_rds("data/socio_acc-all_2019.rds") 
 tmp_join_bus <- data.table::copy(tmp_join_bus_raw)
@@ -68,7 +67,9 @@ tmp_w <- tmp_w %>%
   .[!is.na(CMASB30) | !is.nan(CMASB30) ] %>% 
   .[CMASB30 > 0.00]
 
-#  PLOT 1 = CMASB30 | transporte ativo ----
+
+#  CMASB30 | walk ----
+
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
@@ -76,16 +77,17 @@ tmp_plot <- data.table::copy(tmp_w) %>%
   .[mode %in% c("walk")] %>% 
   .[,label := paste0(cor,"_",decil_status)] %>% 
   .[,label := factor(label
-                     ,levels = c("cor_negra_Pobre"
-                                 ,"cor_branca_Pobre"
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
                                  ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
                                  ,"cor_negra_Rica"
-                                 ,"cor_branca_Rica")
-                     ,labels = c("Baixa Negra"
-                                 ,"Baixa Branca"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
                                  ,"Média"
-                                 ,"Alta Negra"
-                                 ,"Alta Branca"))] 
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
 
 tmp_city_order <- data.table::copy(tmp_plot) %>% 
   .[label == "Média"] %>% 
@@ -109,28 +111,115 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
+# plot
 
-ggplot(tmp_plot ) + 
+CMASB30_walk_plot <- ggplot() + 
   geom_segment(data = tmp_plot[,list(min(CMASB30),max(CMASB30)),by = city_f]
                ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(aes(x = CMASB30,y = city_f
-                 ,color = label),size=2.5,shape = 1,stroke = 2.)+
-  scale_color_manual(values = c("#b79f00","#dbcf80"
-                               ,"red","#89CFF0","#0000FF"))+
- # facet_grid(rows  = vars(mode),scales = "free")+
-  labs(title = "Medida cumulativa ativa (2019)"
-       ,subtitle = "Oportunidades de sáude de baixa complexidade acessíveis em até 30 minutos a pé"
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = CMASB30,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = CMASB30,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  labs(title = NULL
+       ,subtitle = "Medida cumulativa ativa"
        ,color = "Renda e raça"
        ,x = "Nº de oportunidades"
        , y = NULL
        , fill = "Cor - Modo de transporte")+
-  guides(shape = "none")+
-  theme_bw()
+  #guides(shape = "none")+
+  aop_style()
 
-ggsave(filename = "figures/CMASB30_walk.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+CMASB30_walk_plot
 
-#  PLOT 2 = CMASB30 | bike ----
+# #  TMISB | walk ----
+
+tmp_plot <- data.table::copy(tmp_w) %>% 
+  .[ano == 2019 ] %>% 
+  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
+  .[mode %in% c("walk")] %>% 
+  .[,label := paste0(cor,"_",decil_status)] %>% 
+  .[,label := factor(label
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
+                                 ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
+                                 ,"cor_negra_Rica"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
+                                 ,"Média"
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
+
+tmp_city_order <- data.table::copy(tmp_plot) %>% 
+  .[label == "Média"] %>% 
+  .[order(TMISB),city]
+
+
+dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+                                     ,"for","goi","gua","mac","man","nat","poa"
+                                     ,"rec","rio","sal","sgo","slz","spo"),
+                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+                                     ,"Campo Grande","Curitiba","Duque de Caxias"
+                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
+                                     ,"Manaus","Natal","Porto Alegre"
+                                     ,"Recife","Rio de Janeiro","Salvador"
+                                     ,"Sao Goncalo"
+                                     ,"Sao Luis","Sao Paulo"))
+tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+  .[1:length(tmp_city_order),labels]
+
+tmp_plot[,city_f := factor(city
+                           ,levels = tmp_city_order
+                           ,labels = tmp_city_labels)]
+
+# plot
+
+TMISB_walk_plot <- ggplot() + 
+  geom_segment(data = tmp_plot[,list(min(TMISB),max(TMISB)),by = city_f]
+               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = TMISB,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = TMISB,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  # scale_color_manual(values = c("#b79f00","#dbcf80"
+  #                              ,"red","#89CFF0","#0000FF"))+
+  scale_colour_aop(palette = "vclevel")+
+  # facet_grid(rows  = vars(mode),scales = "free")+
+  labs(#title = "Medida cumulativa ativa (2019)"
+    ,title = NULL
+    ,subtitle = "Tempo mínimo"
+    ,color = "Renda e raça"
+    ,x = "Tempo mínimo (minutos)"
+    , y = NULL
+    , fill = "Cor - Modo de transporte")+
+  #guides(shape = "none")+
+  aop_style()+
+  theme(legend.position = c(0.875,0.15))
+
+
+TMISB_walk_plot
+
+# P1 | walk ----------
+
+
+CMASB30_walk_plot + TMISB_walk_plot +
+  plot_annotation(
+    title = 'Acesso a oportunidades de saúde de baixa complexidade (2019)',
+    subtitle = 'Modo caminhada',
+    #caption = 'Disclaimer: None of these plots are insightful'
+  )
+ggsave(filename = "figures/CMASB30_TMI_walk.png",
+       width = 34,height = 20,scale = 0.8,units = "cm")
+
+
+#  CMASB30 | bike ----
+
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
@@ -138,16 +227,17 @@ tmp_plot <- data.table::copy(tmp_w) %>%
   .[mode %in% c("bike")] %>% 
   .[,label := paste0(cor,"_",decil_status)] %>% 
   .[,label := factor(label
-                     ,levels = c("cor_negra_Pobre"
-                                 ,"cor_branca_Pobre"
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
                                  ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
                                  ,"cor_negra_Rica"
-                                 ,"cor_branca_Rica")
-                     ,labels = c("Baixa Negra"
-                                 ,"Baixa Branca"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
                                  ,"Média"
-                                 ,"Alta Negra"
-                                 ,"Alta Branca"))] 
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
 
 tmp_city_order <- data.table::copy(tmp_plot) %>% 
   .[label == "Média"] %>% 
@@ -171,51 +261,52 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
+# plot
 
-ggplot(tmp_plot ) + 
+CMASB30_bike_plot <- ggplot() + 
   geom_segment(data = tmp_plot[,list(min(CMASB30),max(CMASB30)),by = city_f]
                ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(aes(x = CMASB30,y = city_f
-                 ,color = label),size=2.5,shape = 1,stroke = 2.)+
-  scale_color_manual(values = c("#b79f00","#dbcf80"
-                                ,"red","#89CFF0","#0000FF"))+
-  # facet_grid(rows  = vars(mode),scales = "free")+
-  labs(title = "Medida cumulativa ativa (2019)"
-       ,subtitle = "Oportunidades de sáude de baixa complexidade acessíveis em até 30 minutos por bicicleta"
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = CMASB30,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = CMASB30,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  labs(title = NULL
+       ,subtitle = "Medida cumulativa ativa"
        ,color = "Renda e raça"
        ,x = "Nº de oportunidades"
        , y = NULL
        , fill = "Cor - Modo de transporte")+
-  guides(shape = "none")+
-  theme_bw()
+  #guides(shape = "none")+
+  aop_style()
 
-ggsave(filename = "figures/CMASB30_bike.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+CMASB30_bike_plot
 
-#  PLOT 3 = CMASA30 | car ----
+# #  TMISB | bike ----
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
-  .[pico == 1 ] %>% 
   .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
-  .[mode %in% c("car")] %>% 
+  .[mode %in% c("bike")] %>% 
   .[,label := paste0(cor,"_",decil_status)] %>% 
   .[,label := factor(label
-                     ,levels = c("cor_negra_Pobre"
-                                 ,"cor_branca_Pobre"
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
                                  ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
                                  ,"cor_negra_Rica"
-                                 ,"cor_branca_Rica")
-                     ,labels = c("Baixa Negra"
-                                 ,"Baixa Branca"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
                                  ,"Média"
-                                 ,"Alta Negra"
-                                 ,"Alta Branca"))] 
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
 
 tmp_city_order <- data.table::copy(tmp_plot) %>% 
   .[label == "Média"] %>% 
-  .[pico == 1 ] %>% 
-  .[order(CMASA30),city]
+  .[order(TMISB),city]
 
 
 dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
@@ -235,50 +326,71 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
+# plot
 
-ggplot(tmp_plot ) + 
-  geom_segment(data = tmp_plot[,list(min(CMASA30),max(CMASA30)),by = city_f]
+TMISB_bike_plot <- ggplot() + 
+  geom_segment(data = tmp_plot[,list(min(TMISB),max(TMISB)),by = city_f]
                ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(aes(x = CMASA30,y = city_f
-                 ,color = label),size=2.5,shape = 1,stroke = 2.)+
-  scale_color_manual(values = c("#b79f00","#dbcf80"
-                                ,"red","#89CFF0","#0000FF"))+
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = TMISB,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = TMISB,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  # scale_color_manual(values = c("#b79f00","#dbcf80"
+  #                              ,"red","#89CFF0","#0000FF"))+
+  scale_colour_aop(palette = "vclevel")+
   # facet_grid(rows  = vars(mode),scales = "free")+
-  labs(title = "Medida cumulativa ativa (2019)"
-       ,subtitle = "Oportunidades de sáude de alta complexidade acessíveis em até 30 minutos por \nautomóvel"
-       ,color = "Renda e raça"
-       ,x = "Nº de oportunidades"
-       , y = NULL
-       , fill = "Cor - Modo de transporte")+
-  guides(shape = "none")+
-  theme_bw()
+  labs(#title = "Medida cumulativa ativa (2019)"
+    ,title = NULL
+    ,subtitle = "Tempo mínimo"
+    ,color = "Renda e raça"
+    ,x = "Tempo mínimo (minutos)"
+    , y = NULL
+    , fill = "Cor - Modo de transporte")+
+  #guides(shape = "none")+
+  aop_style()+
+  theme(legend.position = c(0.875,0.15))
 
-ggsave(filename = "figures/CMASA30_car.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
 
-#  PLOT 4 = CMASA30 | bus ----
+TMISB_walk_plot
+
+# P2 | bike ----------
+
+
+CMASB30_bike_plot + TMISB_bike_plot +
+  plot_annotation(
+    title = 'Acesso a oportunidades de saúde de baixa complexidade (2019)',
+    subtitle = 'Modo bicicleta',
+    #caption = 'Disclaimer: None of these plots are insightful'
+  )
+ggsave(filename = "figures/CMASB30_TMI_bike.png",
+       width = 34,height = 20,scale = 0.8,units = "cm")
+
+#  CMASA30 | transit ----
+
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
-  .[pico == 1 ] %>% 
+  .[pico  == 1] %>% 
   .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
   .[mode %in% c("transit")] %>% 
   .[,label := paste0(cor,"_",decil_status)] %>% 
   .[,label := factor(label
-                     ,levels = c("cor_negra_Pobre"
-                                 ,"cor_branca_Pobre"
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
                                  ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
                                  ,"cor_negra_Rica"
-                                 ,"cor_branca_Rica")
-                     ,labels = c("Baixa Negra"
-                                 ,"Baixa Branca"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
                                  ,"Média"
-                                 ,"Alta Negra"
-                                 ,"Alta Branca"))] 
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
 
 tmp_city_order <- data.table::copy(tmp_plot) %>% 
   .[label == "Média"] %>% 
-  .[pico == 1 ] %>% 
   .[order(CMASA30),city]
 
 
@@ -299,24 +411,253 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
+# plot
 
-ggplot(tmp_plot ) + 
+CMASA30_transit_plot <- ggplot() + 
   geom_segment(data = tmp_plot[,list(min(CMASA30),max(CMASA30)),by = city_f]
                ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(aes(x = CMASA30,y = city_f
-                 ,color = label),size=2.5,shape = 1,stroke = 2.)+
-  scale_color_manual(values = c("#b79f00","#dbcf80"
-                                ,"red","#89CFF0","#0000FF"))+
-  # facet_grid(rows  = vars(mode),scales = "free")+
-  labs(title = "Medida cumulativa ativa (2019)"
-       ,subtitle = "Oportunidades de sáude de alta complexidade acessíveis em até 30 minutos por \ntransporte público"
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = CMASA30,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = CMASA30,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  labs(title = NULL
+       ,subtitle = "Medida cumulativa ativa"
        ,color = "Renda e raça"
        ,x = "Nº de oportunidades"
        , y = NULL
        , fill = "Cor - Modo de transporte")+
-  guides(shape = "none")+
-  theme_bw()
+  #guides(shape = "none")+
+  aop_style()
 
-ggsave(filename = "figures/CMASA30_transit.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+CMASA30_transit_plot
 
+# #  TMISA | transit ----
+
+tmp_plot <- data.table::copy(tmp_w) %>% 
+  .[ano == 2019 ] %>% 
+  .[pico  == 1] %>% 
+  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
+  .[mode %in% c("transit")] %>% 
+  .[,label := paste0(cor,"_",decil_status)] %>% 
+  .[,label := factor(label
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
+                                 ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
+                                 ,"cor_negra_Rica"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
+                                 ,"Média"
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
+
+tmp_city_order <- data.table::copy(tmp_plot) %>% 
+  .[label == "Média"] %>% 
+  .[order(TMISA),city]
+
+
+dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+                                     ,"for","goi","gua","mac","man","nat","poa"
+                                     ,"rec","rio","sal","sgo","slz","spo"),
+                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+                                     ,"Campo Grande","Curitiba","Duque de Caxias"
+                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
+                                     ,"Manaus","Natal","Porto Alegre"
+                                     ,"Recife","Rio de Janeiro","Salvador"
+                                     ,"Sao Goncalo"
+                                     ,"Sao Luis","Sao Paulo"))
+tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+  .[1:length(tmp_city_order),labels]
+
+tmp_plot[,city_f := factor(city
+                           ,levels = tmp_city_order
+                           ,labels = tmp_city_labels)]
+
+# plot
+
+TMISA_transit_plot <- ggplot() + 
+  geom_segment(data = tmp_plot[,list(min(TMISA),max(TMISA)),by = city_f]
+               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = TMISA,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = TMISA,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  # facet_grid(rows  = vars(mode),scales = "free")+
+  labs(#title = "Medida cumulativa ativa (2019)"
+    ,title = NULL
+    ,subtitle = "Tempo mínimo"
+    ,color = "Renda e raça"
+    ,x = "Tempo mínimo (minutos)"
+    , y = NULL
+    , fill = "Cor - Modo de transporte")+
+  #guides(shape = "none")+
+  aop_style()+
+  theme(legend.position = c(0.875,0.15))
+
+
+TMISA_transit_plot
+
+# P3 | transit ----------
+
+
+CMASA30_transit_plot + TMISA_transit_plot +
+  plot_annotation(
+    title = 'Acesso a oportunidades de saúde de alta complexidade (2019)',
+    subtitle = 'Modo Transporte Público',
+    #caption = 'Disclaimer: None of these plots are insightful'
+  )
+ggsave(filename = "figures/CMASA30_TMI_transit.png",
+       width = 34,height = 20,scale = 0.8,units = "cm")
+
+#  CMASB30 | car ----
+
+
+tmp_plot <- data.table::copy(tmp_w) %>% 
+  .[ano == 2019 ] %>% 
+  .[pico  == 1] %>% 
+  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
+  .[mode %in% c("car")] %>% 
+  .[,label := paste0(cor,"_",decil_status)] %>% 
+  .[,label := factor(label
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
+                                 ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
+                                 ,"cor_negra_Rica"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
+                                 ,"Média"
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
+
+tmp_city_order <- data.table::copy(tmp_plot) %>% 
+  .[label == "Média"] %>% 
+  .[order(CMASA30),city]
+
+
+dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+                                     ,"for","goi","gua","mac","man","nat","poa"
+                                     ,"rec","rio","sal","sgo","slz","spo"),
+                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+                                     ,"Campo Grande","Curitiba","Duque de Caxias"
+                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
+                                     ,"Manaus","Natal","Porto Alegre"
+                                     ,"Recife","Rio de Janeiro","Salvador"
+                                     ,"Sao Goncalo"
+                                     ,"Sao Luis","Sao Paulo"))
+tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+  .[1:length(tmp_city_order),labels]
+
+tmp_plot[,city_f := factor(city
+                           ,levels = tmp_city_order
+                           ,labels = tmp_city_labels)]
+
+# plot
+
+CMASA30_car_plot <- ggplot() + 
+  geom_segment(data = tmp_plot[,list(min(CMASA30),max(CMASA30)),by = city_f]
+               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = CMASA30,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = CMASA30,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  labs(title = NULL
+       ,subtitle = "Medida cumulativa ativa"
+       ,color = "Renda e raça"
+       ,x = "Nº de oportunidades"
+       , y = NULL
+       , fill = "Cor - Modo de transporte")+
+  aop_style()+
+  theme(legend.position = c(0.875,0.15))
+
+CMASA30_car_plot
+
+# #  TMISA | car ----
+
+tmp_plot <- data.table::copy(tmp_w) %>% 
+  .[ano == 2019 ] %>% 
+  .[pico  == 1] %>% 
+  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
+  .[mode %in% c("car")] %>% 
+  .[,label := paste0(cor,"_",decil_status)] %>% 
+  .[,label := factor(label
+                     ,levels = c("cor_branca_Pobre"
+                                 ,"cor_branca_Rica"
+                                 ,"media_media populacao"
+                                 ,"cor_negra_Pobre"
+                                 ,"cor_negra_Rica"
+                     )
+                     ,labels = c("Baixa Branca"
+                                 ,"Alta Branca"
+                                 ,"Média"
+                                 ,"Baixa Negra"
+                                 ,"Alta Negra"))] 
+
+tmp_city_order <- data.table::copy(tmp_plot) %>% 
+  .[label == "Média"] %>% 
+  .[order(TMISA),city]
+
+
+dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+                                     ,"for","goi","gua","mac","man","nat","poa"
+                                     ,"rec","rio","sal","sgo","slz","spo"),
+                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+                                     ,"Campo Grande","Curitiba","Duque de Caxias"
+                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
+                                     ,"Manaus","Natal","Porto Alegre"
+                                     ,"Recife","Rio de Janeiro","Salvador"
+                                     ,"Sao Goncalo"
+                                     ,"Sao Luis","Sao Paulo"))
+tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+  .[1:length(tmp_city_order),labels]
+
+tmp_plot[,city_f := factor(city
+                           ,levels = tmp_city_order
+                           ,labels = tmp_city_labels)]
+
+# plot
+
+TMISA_car_plot <- ggplot() + 
+  geom_segment(data = tmp_plot[,list(min(TMISA),max(TMISA)),by = city_f]
+               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
+  geom_point(data = tmp_plot[decil_status != "media populacao"]
+             ,aes(x = TMISA,y = city_f
+                  ,color = label),size=2.5,alpha = 0.6,shape = 1,stroke = 2.)+
+  geom_point(data = tmp_plot[decil_status == "media populacao"]
+             ,aes(x = TMISA,y = city_f)
+             ,size=2.5,shape = 3,alpha = 0.6,color = "grey")+
+  scale_colour_aop(palette = "vclevel")+
+  labs(title = NULL
+    ,subtitle = "Tempo mínimo"
+    ,color = "Renda e raça"
+    ,x = "Tempo mínimo (minutos)"
+    , y = NULL
+    , fill = "Cor - Modo de transporte")+
+  aop_style()
+
+TMISA_car_plot
+
+# P4 | car ----------
+
+
+CMASA30_car_plot + TMISA_car_plot +
+  plot_annotation(
+    title = 'Acesso a oportunidades de saúde de alta complexidade (2019)',
+    subtitle = 'Modo automóvel',
+    #caption = 'Disclaimer: None of these plots are insightful'
+  )
+ggsave(filename = "figures/CMASA30_TMI_car.png",
+       width = 34,height = 20,scale = 0.8,units = "cm")
+
+# End-----

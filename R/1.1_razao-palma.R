@@ -13,6 +13,9 @@ library(sf)
 library(patchwork)
 library(mapview)
 library(aopdata) # devtools::install_github("ipeaGIT/aopdata", subdir = "r-package")
+# add style
+source('R/colours.R')
+
 
 # read files ------
 
@@ -85,25 +88,29 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
-ggplot(tmp_plot)+
+CMASA30_transit_plot <- ggplot(tmp_plot)+
   geom_bar(aes(x = RP_CMASA30,y = city_f),
            stat = "identity",
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1,1.05,max(tmp_plot$RP_CMASA30)*1.05)) ) + 
-  labs(title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
-       ,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por transporte público',
-       ,x = "Razão de Palma"
-       , y = NULL)+
+  labs(#title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
+    title = NULL
+    #,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por transporte público',
+    ,subtitle = 'Transporte público',
+    ,x = "Razão de Palma"
+    , y = NULL)+
   geom_text(aes(x = RP_CMASA30,y = city_f,
-                label = round(RP_CMASA30,1)), 
+                label = round(RP_CMASA30,1)),label.size = 0, 
             hjust = -0.2,size = 3.25,fontface = "bold",
             position = position_dodge(width = 1))+
-  theme_bw()
+  theme_bw()+
+  aop_style()
 
+CMASA30_transit_plot
 
 ggsave(filename = "figures/RP_CMASA30_transit.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+       width = 24,height = 20,scale = 0.6,units = "cm")
 
 # PLOT 2 = car X CMASA30 ----
 
@@ -138,19 +145,20 @@ ggplot(tmp_plot)+
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1,1.05,max(tmp_plot$RP_CMASA30)*1.05)) ) + 
-  labs(title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
-       ,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por automóvel',
-       ,x = "Razão de Palma"
-       , y = NULL)+
+  labs(#title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
+    title = NULL
+    ,subtitle = 'Automóvel',
+    ,x = "Razão de Palma"
+    , y = NULL)+
   geom_text(aes(x = RP_CMASA30,y = city_f,
-                label = round(RP_CMASA30,1)), 
+                label = round(RP_CMASA30,1)),label.size = 0, 
             hjust = -0.2,size = 3.25,fontface = "bold",
             position = position_dodge(width = 1))+
-  theme_bw()
+  aop_style()
 
 
 ggsave(filename = "figures/RP_CMASA30_car.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+       width = 24,height = 20,scale = 0.6,units = "cm")
 
 # PLOT 3 = RP walk X CMASB30 ----
 
@@ -185,19 +193,20 @@ ggplot(tmp_plot)+
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.05,max(tmp_plot$RP_CMASB30)*1.05)) ) + 
-  labs(title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
-       ,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por caminhada',
-       ,x = "Razão de Palma"
-       , y = NULL)+
+  labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
+    title = NULL
+    ,subtitle = 'Modo caminhada',
+    ,x = "Razão de Palma"
+    , y = NULL)+
   geom_text(aes(x = RP_CMASB30,y = city_f,
                 label = round(RP_CMASB30,1)), 
-            hjust = -0.2,size = 3.25,fontface = "bold",
+            hjust = -0.2,size = 3.25,fontface = "bold",label.size = 0,
             position = position_dodge(width = 1))+
-  theme_bw()
+  aop_style()
 
 
 ggsave(filename = "figures/RP_CMASB30_walk.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+       width = 24,height = 20,scale = 0.6,units = "cm")
 
 # PLOT 4 = RP bike X CMASB30 ----
 
@@ -232,16 +241,20 @@ ggplot(tmp_plot)+
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.05,max(tmp_plot$RP_CMASB30)*1.05)) ) + 
-  labs(title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
-       ,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por bicicleta',
+  labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
+       title = NULL
+       #,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por bicicleta',
+       ,subtitle = 'Modo bicicleta',
        ,x = "Razão de Palma"
        , y = NULL)+
-  geom_text(aes(x = RP_CMASB30,y = city_f,
-                label = round(RP_CMASB30,1)), 
-            hjust = -0.2,size = 3.25,fontface = "bold",
+  geom_label(aes(x = RP_CMASB30,y = city_f,
+                label = round(RP_CMASB30,1)), fill = "white",
+            hjust = -0.2,size = 3.25,fontface = "plain",label.size = 0,
             position = position_dodge(width = 1))+
-  theme_bw()
+  aop_style()
 
 
 ggsave(filename = "figures/RP_CMASB30_bike.png",
-       width = 24,height = 20,scale = 0.8,units = "cm")
+       width = 24,height = 20,scale = 0.6,units = "cm")
+
+# End -----
