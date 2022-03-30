@@ -24,7 +24,9 @@ tmp_join <- list(tmp_join_bus,tmp_join_car) %>%
 
 # decil status
 tmp_join[decil %in% c(9,10),decil_status := "Rica"]
+#tmp_join[decil %in% c(10),decil_status := "Rica"]
 tmp_join[decil %in% c(1:2),decil_status := "Pobre"]
+#tmp_join[decil %in% c(1:4),decil_status := "Pobre"]
 tmp_join <- tmp_join[!is.na(decil_status)]
 
 # format wide-to-long
@@ -42,13 +44,16 @@ tmp_melt <- tmp_melt %>%
   .[is.infinite(TMISB),TMISB := NA] %>% 
   .[is.infinite(TMISA),TMISA := NA] %>% 
   .[is.nan(CMASB30), CMASB30 := NA] %>% 
-  .[is.nan(CMASA30), CMASA30 := NA]
+  .[is.nan(CMASA30), CMASA30 := NA] %>% 
+  .[is.nan(CMASB60), CMASB60 := NA] %>% 
+  .[is.nan(CMASA60), CMASA60 := NA]
 
 # by (city,mode,pico,ano,cor)
 tmp_w1 <- data.table::copy(tmp_melt) %>% 
   .[,lapply(.SD,weighted.mean,total,na.rm = TRUE)
     ,by = .(city,mode,pico,ano,cor,decil_status)
-    ,.SDcols = c("CMASB30","CMASA30","TMISB","TMISA")] %>% 
+    ,.SDcols = c("CMASB30","CMASA30"
+                 ,"CMASB60","CMASA60","TMISB","TMISA")] %>% 
   .[decil_status   != "-"]
 
 
@@ -56,7 +61,8 @@ tmp_w1 <- data.table::copy(tmp_melt) %>%
 tmp_w2 <- data.table::copy(tmp_melt) %>% 
   .[,lapply(.SD,weighted.mean,total,na.rm = TRUE)
     ,by = .(city,mode,pico,ano)
-    ,.SDcols = c("CMASB30","CMASA30","TMISB","TMISA")] %>% 
+    ,.SDcols =  c("CMASB30","CMASA30"
+                  ,"CMASB60","CMASA60","TMISB","TMISA")] %>% 
   .[,decil_status := "media populacao",] %>% 
   .[,cor := "media"]
 
@@ -65,7 +71,9 @@ tmp_w <- rbind(tmp_w1,tmp_w2,use.names=TRUE)
 
 tmp_w <- tmp_w %>% 
   .[!is.na(CMASB30) | !is.nan(CMASB30) ] %>% 
-  .[CMASB30 > 0.00]
+  .[!is.na(CMASB60) | !is.nan(CMASB60) ] %>% 
+  .[CMASB30 > 0.00] %>% 
+  .[CMASB60 > 0.00] 
 
 
 #  CMASB30 | walk ----
@@ -214,7 +222,7 @@ CMASB30_walk_plot + TMISB_walk_plot +
     subtitle = 'Modo caminhada',
     #caption = 'Disclaimer: None of these plots are insightful'
   )
-ggsave(filename = "figures/CMASB30_TMI_walk.png",
+ggsave(filename = "figures/CMASB30_TMI_walk_40-10rico.png",
        width = 34,height = 20,scale = 0.8,units = "cm")
 
 
@@ -353,8 +361,9 @@ TMISB_bike_plot <- ggplot() +
   theme(legend.position = c(0.875,0.15))
 
 
-TMISB_walk_plot
-
+TMISB_bike_plot
+ggsave(filename = "figures/TMI_bike_40-10rico.png",
+       width = 17,height = 20,scale = 0.8,units = "cm")
 # P2 | bike ----------
 
 
@@ -364,7 +373,7 @@ CMASB30_bike_plot + TMISB_bike_plot +
     subtitle = 'Modo bicicleta',
     #caption = 'Disclaimer: None of these plots are insightful'
   )
-ggsave(filename = "figures/CMASB30_TMI_bike.png",
+ggsave(filename = "figures/CMASB30_TMI_bike_40-10rico.png",
        width = 34,height = 20,scale = 0.8,units = "cm")
 
 #  CMASA30 | transit ----
@@ -508,12 +517,8 @@ TMISA_transit_plot
 
 
 CMASA30_transit_plot + TMISA_transit_plot +
-  plot_annotation(
-    title = 'Acesso a oportunidades de saúde de alta complexidade (2019)',
-    subtitle = 'Modo Transporte Público',
-    #caption = 'Disclaimer: None of these plots are insightful'
-  )
-ggsave(filename = "figures/CMASA30_TMI_transit.png",
+  plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
+ggsave(filename = "figures/CMASA30_TMI_transit_40-10rico.png",
        width = 34,height = 20,scale = 0.8,units = "cm")
 
 #  CMASB30 | car ----
@@ -652,12 +657,8 @@ TMISA_car_plot
 
 
 CMASA30_car_plot + TMISA_car_plot +
-  plot_annotation(
-    title = 'Acesso a oportunidades de saúde de alta complexidade (2019)',
-    subtitle = 'Modo automóvel',
-    #caption = 'Disclaimer: None of these plots are insightful'
-  )
-ggsave(filename = "figures/CMASA30_TMI_car.png",
+  plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
+ggsave(filename = "figures/CMASA30_TMI_car_40-10rico.png",
        width = 34,height = 20,scale = 0.8,units = "cm")
 
 # End-----
