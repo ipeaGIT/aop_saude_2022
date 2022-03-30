@@ -51,6 +51,20 @@ df_renda <- df_all[
 
 df_pop_renda <- dplyr::left_join(df_pop, df_renda)
 
+
+df_t <- df_all[
+  ano == 2019 & pop_total > 0 & pico == 1,
+  .(origin, city, mode, pico, CMASA30, CMASB30)
+]
+
+a <- left_join(
+  df_pop_renda, df_t, 
+  by = c("origin" = "origin", "city" = "city")
+  )
+
+
+
+
 66666666666 ATUALIZAR
 
 df_all_hosp <- df_all[
@@ -133,6 +147,19 @@ df_temp_all[
 
 # boxplot
 # discretizar a proporcao de pessoas negras dentro do hexagono (25% por 25% cada grupo)
+
+
+
+# boxplot -----------------------------------------------------------------
+
+# discretizar a pop do hexagono de acordo com a renda
+# quartil (25% em 25%)
+# quintil (20 em 20%)
+# VER ANOTACOES final 29/03
+
+# classificar o hexagono de acordo com o percentual de negros
+
+# * scatterplot -----------------------------------------------------------
 
 
 
