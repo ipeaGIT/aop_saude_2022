@@ -112,6 +112,8 @@ CMASA30_transit_plot
 ggsave(filename = "figures/RP_CMASA30_transit.png",
        width = 24,height = 20,scale = 0.6,units = "cm")
 
+
+
 # PLOT 2 = car X CMASA30 ----
 
 tmp_plot <- data.table::copy(tmp_w2) %>% 
@@ -139,7 +141,7 @@ tmp_plot[,city_f := factor(city
                            ,levels = tmp_city_order
                            ,labels = tmp_city_labels)]
 
-ggplot(tmp_plot)+
+CMASA30_car_plot <- ggplot(tmp_plot)+
   geom_bar(aes(x = RP_CMASA30,y = city_f),
            stat = "identity",
            position = "dodge")+
@@ -160,6 +162,12 @@ ggplot(tmp_plot)+
 ggsave(filename = "figures/RP_CMASA30_car.png",
        width = 24,height = 20,scale = 0.6,units = "cm")
 
+# PLOT 2.1 = car and transit ----
+
+CMASA30_car_plot + CMASA30_transit_plot +
+  plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
+ggsave(filename = "figures/RP_car_transit.png",
+       width = 34,height = 20,scale = 0.8,units = "cm")
 # PLOT 3 = RP walk X CMASB30 ----
 
 tmp_plot <- data.table::copy(tmp_w2) %>% 
