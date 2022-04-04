@@ -22,6 +22,7 @@ files_acess <- list.files(path = filepath_acess#paste0(filepath_acess,"\\2017")
 files_acess <- files_acess[!(files_acess %like% "_old")]
 files_acess <- files_acess[!(files_acess %like% "_car")]
 files_acess <- files_acess[(files_acess %like% "2019")]
+files_acess <- files_acess[(files_acess %like% "acess_2019")]
 
 
 files_acess_car <- list.files(path = filepath_acess#paste0(filepath_acess,"\\2017")
@@ -29,6 +30,7 @@ files_acess_car <- list.files(path = filepath_acess#paste0(filepath_acess,"\\201
                               ,recursive = TRUE
                               ,full.names = TRUE)
 files_acess_car <- files_acess_car[(files_acess_car %like% "2019")]
+files_acess_car <- files_acess_car[(files_acess_car %like% "acess_2019")]
 
 filepath_socio <- "L:\\Proj_acess_oport\\data\\acesso_oport\\hex_agregados\\"
 files_socio <- list.files(path = filepath_socio#paste0(filepath_socio,"\\2017")
@@ -40,13 +42,14 @@ files_socio <- files_socio[(files_socio %like% "2019")]
 
 # 2) Read and rbind ----
 
-future::plan(strategy = "multisession",workers = 19)
+future::plan(strategy = "multicore",workers = 19)
 tmp_acc <- future.apply::future_lapply(files_acess,readr::read_rds) %>%
   data.table::rbindlist(fill=TRUE)
 tmp_acc <- tmp_acc[,c("origin","city","mode","pico","ano",
                       "CMAST15","CMASB15","CMASM15","CMASA15",
                       "CMAST30","CMASB30","CMASM30","CMASA30",
                       "CMAST45","CMASB45","CMASM45","CMASA45",
+                      "CMAST60","CMASB60","CMASM60","CMASA60",
                       "TMIST","TMISB","TMISM","TMISA","geometry")]
 
 tmp_soc <- future.apply::future_lapply(files_socio,readr::read_rds) %>% 
@@ -57,7 +60,7 @@ tmp_soc <- tmp_soc[,c("id_hex","h3_resolution","sigla_muni","ano"
                       "decil","saude_total","saude_baixa","saude_media",
                       "saude_alta")]
 
-tmp_car <- future.apply::future_lapply(files_acess_car,readr::read_rds) %>%
+tmp_car <- future.apply::future_lapply(files_acess_car[files_acess_car %like% "bsb"],readr::read_rds) %>%
   data.table::rbindlist(fill=TRUE) 
 tmp_car <- tmp_car[,c("origin","city","mode","pico","ano",
                       "CMAST30","CMASB30","CMASM30","CMASA30",
