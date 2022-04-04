@@ -93,7 +93,8 @@ CMASA30_transit_plot <- ggplot(tmp_plot)+
            stat = "identity",
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
-  scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1,1.05,max(tmp_plot$RP_CMASA30)*1.05)) ) + 
+  scale_x_continuous(expand = c(0,0)
+                     ,limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1,1.1,max(tmp_plot$RP_CMASA30)*1.1)) ) + 
   labs(#title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
     title = NULL
     #,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por transporte público',
@@ -107,10 +108,6 @@ CMASA30_transit_plot <- ggplot(tmp_plot)+
   theme_bw()+
   aop_style()
 
-CMASA30_transit_plot
-
-ggsave(filename = "figures/RP_CMASA30_transit.png",
-       width = 24,height = 20,scale = 0.6,units = "cm")
 
 
 
@@ -146,21 +143,22 @@ CMASA30_car_plot <- ggplot(tmp_plot)+
            stat = "identity",
            position = "dodge")+
   geom_vline(xintercept = 1,linetype = "dashed")+
-  scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1,1.05,max(tmp_plot$RP_CMASA30)*1.05)) ) + 
+  scale_x_continuous(expand = c(0,0)
+                     ,limits = c(0,fifelse(max(tmp_plot$RP_CMASA30)<1
+                                           ,1.1
+                                           ,max(tmp_plot$RP_CMASA30)*1.1))) + 
   labs(#title = "Desigualdade de acesso a oportunidades de saúde de alta complexidade"
     title = NULL
     ,subtitle = 'Automóvel',
     ,x = "Razão de Palma"
     , y = NULL)+
   geom_text(aes(x = RP_CMASA30,y = city_f,
-                label = round(RP_CMASA30,1)),label.size = 0, 
+                label = round(RP_CMASA30,1))#,label.size = 0, 
             hjust = -0.2,size = 3.25,fontface = "bold",
             position = position_dodge(width = 1))+
   aop_style()
 
-
-ggsave(filename = "figures/RP_CMASA30_car.png",
-       width = 24,height = 20,scale = 0.6,units = "cm")
+CMASA30_car_plot
 
 # PLOT 2.1 = car and transit ----
 
@@ -168,101 +166,102 @@ CMASA30_car_plot + CMASA30_transit_plot +
   plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
 ggsave(filename = "figures/RP_car_transit.png",
        width = 34,height = 20,scale = 0.8,units = "cm")
-# PLOT 3 = RP walk X CMASB30 ----
 
-tmp_plot <- data.table::copy(tmp_w2) %>% 
-  .[mode == "walk",]
-
-
-tmp_city_order <- data.table::copy(tmp_plot) %>% 
-  .[order(RP_CMASB30 ),city]
-
-
-dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
-                                     ,"for","goi","gua","mac","man","nat","poa"
-                                     ,"rec","rio","sal","sgo","slz","spo"),
-                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
-                                     ,"Campo Grande","Curitiba","Duque de Caxias"
-                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
-                                     ,"Manaus","Natal","Porto Alegre"
-                                     ,"Recife","Rio de Janeiro","Salvador"
-                                     ,"Sao Goncalo"
-                                     ,"Sao Luis","Sao Paulo"))
-tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
-  .[1:length(tmp_city_order),labels]
-
-tmp_plot[,city_f := factor(city
-                           ,levels = tmp_city_order
-                           ,labels = tmp_city_labels)]
-
-ggplot(tmp_plot)+
-  geom_bar(aes(x = RP_CMASB30,y = city_f),
-           stat = "identity",
-           position = "dodge")+
-  geom_vline(xintercept = 1,linetype = "dashed")+
-  scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.05,max(tmp_plot$RP_CMASB30)*1.05)) ) + 
-  labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
-    title = NULL
-    ,subtitle = 'Modo caminhada',
-    ,x = "Razão de Palma"
-    , y = NULL)+
-  geom_text(aes(x = RP_CMASB30,y = city_f,
-                label = round(RP_CMASB30,1)), 
-            hjust = -0.2,size = 3.25,fontface = "bold",label.size = 0,
-            position = position_dodge(width = 1))+
-  aop_style()
-
-
-ggsave(filename = "figures/RP_CMASB30_walk.png",
-       width = 24,height = 20,scale = 0.6,units = "cm")
-
-# PLOT 4 = RP bike X CMASB30 ----
-
-tmp_plot <- data.table::copy(tmp_w2) %>% 
-  .[mode == "bike",]
-
-
-tmp_city_order <- data.table::copy(tmp_plot) %>% 
-  .[order(RP_CMASB30 ),city]
-
-
-dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
-                                     ,"for","goi","gua","mac","man","nat","poa"
-                                     ,"rec","rio","sal","sgo","slz","spo"),
-                          labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
-                                     ,"Campo Grande","Curitiba","Duque de Caxias"
-                                     ,"Fortaleza","Goiania","Guarulhos","Maceio"
-                                     ,"Manaus","Natal","Porto Alegre"
-                                     ,"Recife","Rio de Janeiro","Salvador"
-                                     ,"Sao Goncalo"
-                                     ,"Sao Luis","Sao Paulo"))
-tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
-  .[1:length(tmp_city_order),labels]
-
-tmp_plot[,city_f := factor(city
-                           ,levels = tmp_city_order
-                           ,labels = tmp_city_labels)]
-
-ggplot(tmp_plot)+
-  geom_bar(aes(x = RP_CMASB30,y = city_f),
-           stat = "identity",
-           position = "dodge")+
-  geom_vline(xintercept = 1,linetype = "dashed")+
-  scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.05,max(tmp_plot$RP_CMASB30)*1.05)) ) + 
-  labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
-       title = NULL
-       #,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por bicicleta',
-       ,subtitle = 'Modo bicicleta',
-       ,x = "Razão de Palma"
-       , y = NULL)+
-  geom_label(aes(x = RP_CMASB30,y = city_f,
-                label = round(RP_CMASB30,1)), fill = "white",
-            hjust = -0.2,size = 3.25,fontface = "plain",label.size = 0,
-            position = position_dodge(width = 1))+
-  aop_style()
-
-
-ggsave(filename = "figures/RP_CMASB30_bike.png",
-       width = 24,height = 20,scale = 0.6,units = "cm")
+# # PLOT 3 = RP walk X CMASB30 ----
+# 
+# tmp_plot <- data.table::copy(tmp_w2) %>% 
+#   .[mode == "walk",]
+# 
+# 
+# tmp_city_order <- data.table::copy(tmp_plot) %>% 
+#   .[order(RP_CMASB30 ),city]
+# 
+# 
+# dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+#                                      ,"for","goi","gua","mac","man","nat","poa"
+#                                      ,"rec","rio","sal","sgo","slz","spo"),
+#                           labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+#                                      ,"Campo Grande","Curitiba","Duque de Caxias"
+#                                      ,"Fortaleza","Goiania","Guarulhos","Maceio"
+#                                      ,"Manaus","Natal","Porto Alegre"
+#                                      ,"Recife","Rio de Janeiro","Salvador"
+#                                      ,"Sao Goncalo"
+#                                      ,"Sao Luis","Sao Paulo"))
+# tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+#   .[1:length(tmp_city_order),labels]
+# 
+# tmp_plot[,city_f := factor(city
+#                            ,levels = tmp_city_order
+#                            ,labels = tmp_city_labels)]
+# 
+# ggplot(tmp_plot)+
+#   geom_bar(aes(x = RP_CMASB30,y = city_f),
+#            stat = "identity",
+#            position = "dodge")+
+#   geom_vline(xintercept = 1,linetype = "dashed")+
+#   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.1,max(tmp_plot$RP_CMASB30)*1.1)) ) + 
+#   labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
+#     title = NULL
+#     ,subtitle = 'Modo caminhada',
+#     ,x = "Razão de Palma"
+#     , y = NULL)+
+#   geom_text(aes(x = RP_CMASB30,y = city_f,
+#                 label = round(RP_CMASB30,1)), 
+#             hjust = -0.2,size = 3.25,fontface = "bold",label.size = 0,
+#             position = position_dodge(width = 1))+
+#   aop_style()
+# 
+# 
+# ggsave(filename = "figures/RP_CMASB30_walk.png",
+#        width = 24,height = 20,scale = 0.6,units = "cm")
+# 
+# # PLOT 4 = RP bike X CMASB30 ----
+# 
+# tmp_plot <- data.table::copy(tmp_w2) %>% 
+#   .[mode == "bike",]
+# 
+# 
+# tmp_city_order <- data.table::copy(tmp_plot) %>% 
+#   .[order(RP_CMASB30 ),city]
+# 
+# 
+# dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
+#                                      ,"for","goi","gua","mac","man","nat","poa"
+#                                      ,"rec","rio","sal","sgo","slz","spo"),
+#                           labels = c("Belem","Belo Horizonte","Brasilia","Campinas"
+#                                      ,"Campo Grande","Curitiba","Duque de Caxias"
+#                                      ,"Fortaleza","Goiania","Guarulhos","Maceio"
+#                                      ,"Manaus","Natal","Porto Alegre"
+#                                      ,"Recife","Rio de Janeiro","Salvador"
+#                                      ,"Sao Goncalo"
+#                                      ,"Sao Luis","Sao Paulo"))
+# tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
+#   .[1:length(tmp_city_order),labels]
+# 
+# tmp_plot[,city_f := factor(city
+#                            ,levels = tmp_city_order
+#                            ,labels = tmp_city_labels)]
+# 
+# ggplot(tmp_plot)+
+#   geom_bar(aes(x = RP_CMASB30,y = city_f),
+#            stat = "identity",
+#            position = "dodge")+
+#   geom_vline(xintercept = 1,linetype = "dashed")+
+#   scale_x_continuous(expand = c(0,0),limits = c(0,fifelse(max(tmp_plot$RP_CMASB30)<1,1.1,max(tmp_plot$RP_CMASB30)*1.1)) ) + 
+#   labs(#title = "Desigualdade de acesso a oportunidades de saúde de baixa complexidade"
+#        title = NULL
+#        #,subtitle = 'Razão entre a média do número de estabelecimentos acessíveis \nem 30 minutos entre os 10% mais ricos e os 40% mais pobres por bicicleta',
+#        ,subtitle = 'Modo bicicleta',
+#        ,x = "Razão de Palma"
+#        , y = NULL)+
+#   geom_label(aes(x = RP_CMASB30,y = city_f,
+#                 label = round(RP_CMASB30,1)), fill = "white",
+#             hjust = -0.2,size = 3.25,fontface = "plain",label.size = 0,
+#             position = position_dodge(width = 1))+
+#   aop_style()
+# 
+# 
+# ggsave(filename = "figures/RP_CMASB30_bike.png",
+#        width = 24,height = 20,scale = 0.6,units = "cm")
 
 # End -----
