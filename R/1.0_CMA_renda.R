@@ -23,10 +23,10 @@ tmp_join <- list(tmp_join_bus,tmp_join_car) %>%
   data.table::rbindlist(use.names = TRUE,fill = TRUE)
 
 # decil status
-tmp_join[decil %in% c(9,10),decil_status := "Rica"]
-#tmp_join[decil %in% c(10),decil_status := "Rica"]
-tmp_join[decil %in% c(1:2),decil_status := "Pobre"]
-#tmp_join[decil %in% c(1:4),decil_status := "Pobre"]
+#tmp_join[decil %in% c(9,10),decil_status := "Rica"]
+tmp_join[decil %in% c(10),decil_status := "Rica"]
+#tmp_join[decil %in% c(1:2),decil_status := "Pobre"]
+tmp_join[decil %in% c(1:4),decil_status := "Pobre"]
 tmp_join <- tmp_join[!is.na(decil_status)]
 
 # format wide-to-long
@@ -212,6 +212,8 @@ TMISB_walk_plot <- ggplot() +
 
 
 TMISB_walk_plot
+ggsave(filename = "figures/TMI_walk_40-10rico.png",
+       width = 17,height = 20,scale = 0.8,units = "cm")
 
 # P1 | walk ----------
 
