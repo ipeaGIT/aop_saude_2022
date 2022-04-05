@@ -111,7 +111,7 @@ df_final <- dplyr::left_join(
 )
 
 # CHECK FOR DUPLICATED ORIGINS
-
+df_final <- subset(df_final, quintil != 0)
 
 # add mean ----------------------------------------------------------------
 
@@ -206,7 +206,7 @@ vio_cur / vio_for / vio_rio
 
 # * boxplot -----------------------------------------------------------------
 df_final[mode == "transit" & extremos != "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASA30, fill = extremos))+
+  ggplot(aes(x = class_race, y = CMASA30, fill = extremos, weight = pop_total))+
   geom_boxplot(outlier.shape = NA) +
   facet_wrap(~city, ncol = 5, scales = "free_y") +
   hrbrthemes::theme_ipsum() +
@@ -249,7 +249,7 @@ df_final[mode == "transit"] %>%
              ))+
   geom_point(
     shape = 21
-    ,alpha = 0.25
+    ,alpha = 0.1
     ) + 
   scale_size(range = c(1, 10)) +
   lemon::facet_rep_wrap(~city, ncol = 5) +
@@ -262,8 +262,10 @@ df_final[mode == "transit"] %>%
     axis.line.y = element_line(size = 0.1, color = "grey"),
     legend.position = "bottom"
   ) +
-  scale_color_viridis_d() +
-  scale_fill_viridis_d() +
+  scale_colour_aop(palette = "blue_red") +
+  scale_fill_aop(palette = "blue_red") +
+  #scale_color_viridis_d() +
+  #scale_fill_viridis_d() +
   labs(subtitle = "Alta complexidade - Transporte público")
 
 
