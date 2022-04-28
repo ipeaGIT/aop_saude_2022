@@ -16,77 +16,81 @@ source("R/colours.R")
 
 
 # read data ---------------------------------------------------------------
-
 df_all <- readRDS("data/socio_acc-all_2019.rds")
-#df_car <- readRDS("data/socio_acc-car_2019.rds")
 
-#df_all[, geometry := NULL]
-#df_car[, geometry := NULL]
+# create column -----------------------------------------------------------
 
-
-# * df prop negra -------------------------------------------------------------
-
-# DUVIDA: 
-# o que quer dizer quando hexagono tem pessoas mas CMASA30, por exemplo, é NA?
-# alguns casos assim em Manaus
-
-df_prop <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, cor_indigena, cor_negra, pop_total)
+df_all[
+  , prop_negra_indigena := (cor_indigena + cor_negra) / pop_total, 
+  by = .(origin, city)
 ]
 
-df_prop <- unique(df_prop, by = "origin")
+df_all[prop_negra_indigena > 1]$prop_negra_indigena <- 1
 
+# remover nan de prop_negra_indigena -> PODE RESULTAR EM AUTOCORRELACAO ESPACIAL?
+data.table::setnafill(df_all, fill = 0, cols = "prop_negra_indigena")
 
-df_hex_prop_black <- readr::read_rds("data/hex_prop_black_income.rds")
+# function ----------------------------------------------------------------
+# filtro: pico == 1
+# selecionar modo``
 
-
-# * df renda -------------------------------------------------------
-
-df_renda <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, renda_total, renda_capita, quintil, decil)
-]
-
-df_renda <- unique(df_renda, by = "origin")
-
-
-# * df cma ----------------------------------------------------------------
-
-df_cma <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1,
-  .(origin, city, mode, CMASA30, CMASB30)
-]
-
-
-# join data ---------------------------------------------------------------
-df_prop <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, cor_indigena, cor_negra, pop_total)
-]
-# remove duplicated origins
-df_prop <- unique(df_prop, by = "origin")
-
-
-df_final <- dplyr::left_join(
-  df_prop,
-  df_hex_prop_black,
-  by = c("origin" = "origin", "city" = "city")
-) %>% 
-  dplyr::left_join(
-    df_renda,
-    by = c("origin" = "origin", "city" = "city")
-  ) %>% 
-  dplyr::left_join(
-    df_cma,
-    by = c("origin" = "origin", "city" = "city")
+f_geoda <- function(df, cidade, modo, complexidade){
+  
+  # cidade <- "for"
+  # modo <- "walk"
+  
+  # subset city
+  df_sub <- df[
+    city == cidade & mode == modo & pico == 1
+  ]
+  # remover duplicados
+  df_sub <- unique(df_sub, by = "origin")
+  
+  
+  # st as sf
+  df_sub <- sf::st_as_sf(df_sub)
+  
+  # queen contiguity
+  queen_w <- rgeoda::queen_weights(
+    sf_obj = df_sub
+    , include_lower_order = F
+    , precision_threshold = 0
   )
+  
+  # LISA
+  lisa <- rgeoda::local_moran(
+    w = queen_w 
+    , df = df_sub["prop_negra_indigena"]
+    , permutations = 9999
+    )
+  
+  df_sub <- df_sub %>% 
+    dplyr::mutate(lisa_clst_10 = rgeoda::lisa_clusters(lisa, cutoff = 0.1))
+  # check lisa labels
+  #lisa_labels(lisa)
 
-df_final <- subset(df_final, quintil != 0)
 
+  # plot
+  lisacolors <- lisa_colors(lisa)
+  lisalabels <- lisa_labels(lisa)
+  
+  df_sub %>% 
+    ggplot() + 
+    geom_sf(aes(fill = factor(lisa_clst_10))) +
+    scale_fill_manual(
+      values = lisa_colors(lisa)
+      , labels = lisa_labels(lisa)
+      )
+    labs
+}
 
 # spatial weights ---------------------------------------------------------
 
+# * queen contiguity ------------------------------------------------------
+
+queen_w <- rgeoda::queen_weights(
+  df_final
+)
 
 # LISA --------------------------------------------------------------------
 

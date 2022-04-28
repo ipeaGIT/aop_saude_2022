@@ -27,11 +27,16 @@ df_car <- readRDS("data/socio_acc-car_2019.rds")
 # alguns casos assim em Manaus
 
 df_prop <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, cor_indigena, cor_negra, pop_total)
+  ano == 2019 & pop_total > 0 & pico == 1 ,
+  .(origin, city, mode, cor_indigena, cor_negra, pop_total)
 ]
 
-df_prop <- unique(df_prop, by = "origin")
+#df_prop <- unique(df_prop, by = "origin")
+df_prop <- unique(df_prop, by = c("origin", "city"))
+666666
+# hexagonos duplicados nos pares gua-spo e duq-rio -> O QUE FAZER?
+#identificar duplicados:
+df_prop[duplicated(origin) | duplicated(origin, fromLast=T)] #%>% View()  
 
 # check any na
 any(is.na(df_prop))
@@ -42,7 +47,10 @@ is.nan.df <- function(x){
 any(is.nan.df(df_prop))
 
 # create column prop negra + indigena
-df_prop[, prop_negra_indigena := (cor_indigena + cor_negra) / pop_total]
+df_prop[
+  , prop_negra_indigena := (cor_indigena + cor_negra) / pop_total, 
+  by = .(origin, city)
+  ]
 
 # alguns hexagonos possuem prop_negra_indigena > 1. Ou seja, indigena + negra > pop_total
 # O QUE FAZER?
@@ -64,11 +72,11 @@ df_prop[
 # df renda -------------------------------------------------------
 
 df_renda <- df_all[
-  ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
+  ano == 2019 & pop_total > 0 & pico == 1,
   .(origin, city, pop_total, renda_total, renda_capita, quintil, decil)
 ]
 
-df_renda <- unique(df_renda, by = "origin")
+df_renda <- unique(df_renda, by = c("origin", "city"))
 
 # check any na
 any(is.na(df_renda))
@@ -82,6 +90,8 @@ df_renda[, logical(1), by = quintil]$quintil %>% sort()
 # remove quintil and decil == 0
 df_renda <- subset(df_renda, quintil != 0)
 df_renda <- subset(df_renda, decil != 0)
+
+df_renda[duplicated(origin) | duplicated(origin, fromLast=T)] # %>% View()
 
 df_renda[
   ,
