@@ -31,7 +31,7 @@ df_all <- readRDS("data/socio_acc-all_2019.rds")
 
 df_prop <- df_all[
   ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, cor_indigena, cor_negra, pop_total)
+  .(origin, city, cor_negra, pop_total)
 ]
 
 df_prop <- unique(df_prop, by = "origin")
@@ -61,7 +61,7 @@ df_cma <- df_all[
 # join data ---------------------------------------------------------------
 df_prop <- df_all[
   ano == 2019 & pop_total > 0 & pico == 1 & mode == "walk",
-  .(origin, city, cor_indigena, cor_negra, pop_total)
+  .(origin, city, cor_negra, pop_total)
 ]
 # remove duplicated origins
 df_prop <- unique(df_prop, by = "origin")
@@ -84,6 +84,44 @@ df_final <- dplyr::left_join(
 df_final <- subset(df_final, quintil != 0)
 
 # add mean ----------------------------------------------------------------
+df_median <- df_final[
+  mode == "transit", 
+  .(median_cma = median(CMASA30, na.rm = T),
+    median_prop = median(prop_negra, na.rm = T)), 
+  by = .(city)
+  ]
+
+
+# add labels ---------------------------------------------------------------
+df_label <- data.table(
+  city = "cur"
+  , prop_negra = 0.1698565
+  , CMASA30 = 35
+  , label = "Mediana"
+)
+
+#df_label <- data.table(
+#  city = "cur"
+#  , prop_negra = 0.4
+#  , CMASA30 = 35
+#  , label = "Mediana"
+#)
+
+city.transport.labs <- c(
+  "Belo Horizonte"
+  , "Campinas"
+  , "Curitiba"
+  , "Fortaleza"
+  , "Goiânia"
+  , "Porto Alegre"
+  , "Recife"
+  , "Rio de Janeiro"
+  , "Salvador"
+  , "São Paulo"
+)
+
+names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
+  sort()
 
 
 
@@ -188,7 +226,7 @@ df_final[mode == "transit" & extremos != "Intermediário"] %>%
 
 # BAIXA
 df_final[mode == "walk"] %>% 
-  ggplot(aes(x = prop_negra_indigena, y = CMASB30,
+  ggplot(aes(x = prop_negra, y = CMASB30,
              colour = as.factor(quintil), fill = as.factor(quintil)
              ,size = pop_total
   ))+
@@ -211,18 +249,44 @@ df_final[mode == "walk"] %>%
   scale_fill_viridis_d() +
   labs(subtitle = "Baixa complexidade - A pé")
 
+
+# * * grafico final -------------------------------------------------------
+
 # ALTA
 df_final[mode == "transit"] %>% 
-  ggplot(aes(x = prop_negra_indigena, y = CMASA30,
-             colour = as.factor(quintil), fill = as.factor(quintil)
-             ,size = pop_total
-             ))+
+  ggplot(
+    aes(
+      x = prop_negra
+      , y = CMASA30
+      , colour = as.factor(quintil)
+      , fill = as.factor(quintil)
+      , size = pop_total
+      )
+    )+
   geom_point(
     shape = 21
-    ,alpha = 0.1
+    , alpha = 0.1
     ) + 
-  scale_size(range = c(1, 10)) +
-  lemon::facet_rep_wrap(~city, ncol = 5) +
+  geom_vline(
+    data = df_median
+    , aes(xintercept = median_prop)
+    , linetype = "dashed"
+    , colour = "#5d5d5d"
+  ) +
+  ggtext::geom_richtext(
+    data = df_label, 
+    aes(
+      x = prop_negra
+      , y = CMASA30
+      , label = label
+      )
+    , colour = "black"
+    , inherit.aes = F
+    ) +
+  #scale_size(range = c(1, 10)) +
+  lemon::facet_rep_wrap(
+    ~city, ncol = 5, labeller = labeller(city = city.transport.labs)
+    ) +
   lemon::coord_capped_cart(bottom = "both", left = "both") +
   hrbrthemes::theme_ipsum() +
   theme(
@@ -233,10 +297,33 @@ df_final[mode == "transit"] %>%
     legend.position = "bottom"
   ) +
   scale_colour_aop(palette = "blue_red") +
-  scale_fill_aop(palette = "blue_red") +
+  scale_fill_aop(
+    palette = "blue_red"
+    , guide = guide_legend(override.aes = list(alpha = 0.8, size = 4))
+    ) +
+  scale_size(
+    name = "População Total Hexágono"
+    , range = c(1,10)
+    , breaks = fivenum(df_final$pop_total)
+    , labels = fivenum(df_final$pop_total)
+    , guide = guide_legend(override.aes = list(colour = "#5d5d5d", alpha = 1))
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1)
+  ) +
   #scale_color_viridis_d() +
   #scale_fill_viridis_d() +
-  labs(subtitle = "Alta complexidade - Transporte público")
+  labs(
+    #subtitle = "Alta complexidade - Transporte público",
+     x = "Proporção População Negra"
+    , y = "Estabelecimentos de Alta Complexidade\n acessíveis até 30 min transporte público"
+    , fill = "Quintil de renda\n1 (menor) a 5 (maior)"
+    , colour = "Quintil de renda\n1 (menor) a 5 (maior)"
+    ) #+
+  guides(
+    #size = guide_legend(override.aes = list(size = c(1,5,10)))
+    #,fill = guide_legend(override.aes = list(size = 3, alpha = 0.8))
+  )
 
 
 # * density ---------------------------------------------------------------

@@ -28,7 +28,7 @@ df_car <- readRDS("data/socio_acc-car_2019.rds")
 
 df_prop <- df_all[
   ano == 2019 & pop_total > 0 & pico == 1 ,
-  .(origin, city, mode, cor_indigena, cor_negra, pop_total)
+  .(origin, city, mode, cor_negra, pop_total)
 ]
 
 #df_prop <- unique(df_prop, by = "origin")
@@ -46,22 +46,18 @@ is.nan.df <- function(x){
 }
 any(is.nan.df(df_prop))
 
-# create column prop negra + indigena
+# create column prop negra
 df_prop[
-  , prop_negra_indigena := (cor_indigena + cor_negra) / pop_total, 
+  , prop_negra := cor_negra / pop_total, 
   by = .(origin, city)
   ]
 
-# alguns hexagonos possuem prop_negra_indigena > 1. Ou seja, indigena + negra > pop_total
-# O QUE FAZER?
-# PROVISORIO ABAIXO
-df_prop[prop_negra_indigena > 1]$prop_negra_indigena <- 1
 
 # * classify hex based on % race -----------------------------------------------
 df_prop[
   ,
   class_race := cut(
-    prop_negra_indigena,
+    prop_negra,
     seq(0, 1, 0.25),
     c("<25%", "25-49%", "50-75%", "75%>"),
     include.lowest = T
@@ -105,7 +101,7 @@ df_renda[
 
 # join data ---------------------------------------------------------------
 df_final <- dplyr::left_join(
-  df_prop %>% select(origin, city, prop_negra_indigena, class_race),
+  df_prop %>% select(origin, city, prop_negra, class_race),
   df_renda %>% select(origin, city, extremos), 
   by = c("origin" = "origin", "city" = "city")
 )
