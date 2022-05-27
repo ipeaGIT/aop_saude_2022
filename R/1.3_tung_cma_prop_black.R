@@ -93,19 +93,19 @@ df_median <- df_final[
 
 
 # add labels ---------------------------------------------------------------
+# df_label <- data.table(
+#   city = "cur"
+#   , prop_negra = 0.1698565
+#   , CMASA30 = 35
+#   , label = "Mediana"
+# )
+
 df_label <- data.table(
-  city = "cur"
-  , prop_negra = 0.1698565
-  , CMASA30 = 35
+  city = "bho"
+  , prop_negra = df_median[city=="bho", median_prop]
+  , CMASA30 = 40
   , label = "Mediana"
 )
-
-#df_label <- data.table(
-#  city = "cur"
-#  , prop_negra = 0.4
-#  , CMASA30 = 35
-#  , label = "Mediana"
-#)
 
 city.transport.labs <- c(
   "Belo Horizonte"
@@ -130,130 +130,12 @@ names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$cit
 # boxplot
 # discretizar a proporcao de pessoas negras dentro do hexagono (25% por 25% cada grupo)
 
-# * violin ---------------------------------------------------------------
 
-
-#SAUDE BAIXA
-
-df_final[city == "bho"& mode == "walk" & !extremos == "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASB30, fill = class_race, colour = class_race))+
-  geom_violin(width = 2.1, size = 0.2) +
-  facet_wrap(~extremos) +
-  scale_fill_viridis_d() + 
-  scale_color_viridis_d()+
-  hrbrthemes::theme_ipsum() +
-  theme(legend.position = "none")+
-  coord_flip()
-
-#SAUDE ALTA
-vio_cur <- df_final[city == "cur"& mode == "transit" & !extremos == "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASA30, fill = class_race, colour = class_race))+
-  geom_violin(width = 2.1, size = 0.2) +
-  facet_wrap(~extremos) +
-  scale_fill_viridis_d() + 
-  scale_color_viridis_d()+
-  #aop_style() +
-  hrbrthemes::theme_ipsum() +
-  theme(
-    legend.position = "none"
-    , panel.spacing.x = unit(0.5, "cm")
-    , panel.grid.major.y = element_blank()
-    , panel.grid.minor.x = element_blank()
-  )+
-  coord_flip() +
-  labs(subtitle = "Curitiba")
-
-
-vio_for <- df_final[city == "for"& mode == "transit" & !extremos == "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASA30, fill = class_race, colour = class_race))+
-  geom_violin(width = 2.1, size = 0.2) +
-  facet_wrap(~extremos) +
-  scale_fill_viridis_d() + 
-  scale_color_viridis_d()+
-  #aop_style() +
-  hrbrthemes::theme_ipsum() +
-  theme(
-    legend.position = "none"
-    , strip.text.x = element_blank()
-    , panel.spacing.x = unit(0.5, "cm")
-    , panel.grid.major.y = element_blank()
-    , panel.grid.minor.x = element_blank()
-  )+
-  coord_flip() +
-  labs(subtitle = "Fortaleza")
-
-
-vio_rio <- df_final[city == "rio"& mode == "transit" & !extremos == "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASA30, fill = class_race, colour = class_race))+
-  geom_violin(width = 2.1, size = 0.2) +
-  facet_wrap(~extremos) +
-  scale_fill_viridis_d() + 
-  scale_color_viridis_d()+
-  #aop_style() +
-  hrbrthemes::theme_ipsum() +
-  theme(
-    legend.position = "none"
-    , strip.text.x = element_blank()
-    , panel.spacing.x = unit(0.5, "cm")
-    , panel.grid.major.y = element_blank()
-    , panel.grid.minor.x = element_blank()
-    )+
-  coord_flip() +
-  labs(subtitle = "Rio de Janeiro")
-
-vio_cur / vio_for / vio_rio
-
-
-# discretizar a pop do hexagono de acordo com a renda
-# quartil (25% em 25%)
-# quintil (20 em 20%)
-# VER ANOTACOES final 29/03
-
-# classificar o hexagono de acordo com o percentual de negros
-
-
-# * boxplot -----------------------------------------------------------------
-df_final[mode == "transit" & extremos != "Intermediário"] %>%  
-  ggplot(aes(x = class_race, y = CMASA30, fill = extremos, weight = pop_total))+
-  geom_boxplot(outlier.shape = NA) +
-  facet_wrap(~city, ncol = 5, scales = "free_y") +
-  hrbrthemes::theme_ipsum() +
-  theme(legend.position = "bottom") +
-  labs(subtitle = "Alta complexidade - Transporte público")
-
-
-# * scatterplot -----------------------------------------------------------
-
-# BAIXA
-df_final[mode == "walk"] %>% 
-  ggplot(aes(x = prop_negra, y = CMASB30,
-             colour = as.factor(quintil), fill = as.factor(quintil)
-             ,size = pop_total
-  ))+
-  geom_point(
-    shape = 21
-    ,alpha = 0.25
-  ) + 
-  scale_size(range = c(1, 10)) +
-  lemon::facet_rep_wrap(~city, ncol = 5) +
-  lemon::coord_capped_cart(bottom = "both", left = "both") +
-  hrbrthemes::theme_ipsum() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    axis.line.x = element_line(size = 0.1, color = "grey"),
-    axis.line.y = element_line(size = 0.1, color = "grey"),
-    legend.position = "bottom"
-  ) +
-  scale_color_viridis_d() +
-  scale_fill_viridis_d() +
-  labs(subtitle = "Baixa complexidade - A pé")
-
-
-# * * grafico final -------------------------------------------------------
+# * grafico final -------------------------------------------------------
 
 # ALTA
-df_final[mode == "transit"] %>% 
+#(
+  gg_final <- df_final[mode == "transit"] %>% 
   ggplot(
     aes(
       x = prop_negra
@@ -265,7 +147,7 @@ df_final[mode == "transit"] %>%
     )+
   geom_point(
     shape = 21
-    , alpha = 0.1
+    , alpha = 0.075
     ) + 
   geom_vline(
     data = df_median
@@ -281,61 +163,97 @@ df_final[mode == "transit"] %>%
       , label = label
       )
     , colour = "black"
+    , size = 3.75
     , inherit.aes = F
+    , family = "Arial Narrow"
     ) +
   #scale_size(range = c(1, 10)) +
   lemon::facet_rep_wrap(
-    ~city, ncol = 5, labeller = labeller(city = city.transport.labs)
+    ~city, ncol = 2, nrow = 5, labeller = labeller(city = city.transport.labs)
     ) +
   lemon::coord_capped_cart(bottom = "both", left = "both") +
   hrbrthemes::theme_ipsum() +
   theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    axis.line.x = element_line(size = 0.1, color = "grey"),
-    axis.line.y = element_line(size = 0.1, color = "grey"),
-    legend.position = "bottom"
+      panel.grid.minor = element_blank()
+    , panel.grid.major = element_blank()
+    
+    , axis.line.x = element_line(size = 0.1, color = "grey")
+    , axis.line.y = element_line(size = 0.1, color = "grey")
+    , axis.title.y = element_text(margin = margin(r = 0.2, unit = "cm")
+                                  , size = 10)
+    , axis.title.x = element_text(margin = margin(t = 0.2, unit = "cm")
+                                  , size = 10)
+    
+    , legend.position = "bottom"
+    , legend.box = "horizontal"
+    , legend.spacing.y = unit(0, "cm")
+    , legend.spacing.x = unit(0.05, "cm")
+    , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
+    , legend.box.margin = margin(t = -0.25, unit = "cm")
+    
+    , panel.spacing.y = unit(0, "cm")
+    , panel.spacing.x = unit(0.5, "cm")
+    
+    , plot.margin = unit(c(0.5,0.75,0.5,0.75), "cm") # t r b l
   ) +
-  scale_colour_aop(palette = "blue_red") +
-  scale_fill_aop(
-    palette = "blue_red"
-    , guide = guide_legend(override.aes = list(alpha = 0.8, size = 4))
+  scale_colour_brewer(
+    palette = "RdYlBu"
+    , guide = guide_legend(order = 1,
+                           override.aes = list(alpha = 1, size = 4, colour = "black"))
     ) +
+  scale_fill_brewer(
+    palette = "RdYlBu"
+    , guide = guide_legend(order = 1,
+                           override.aes = list(alpha = 1, size = 4))
+    ) +
+  #scale_colour_aop(palette = "blue_red") +
+  #scale_fill_aop(
+  #  palette = "blue_red"
+  #  , guide = guide_legend(override.aes = list(alpha = 0.8, size = 4))
+  #  ) +
   scale_size(
-    name = "População Total Hexágono"
-    , range = c(1,10)
-    , breaks = fivenum(df_final$pop_total)
-    , labels = fivenum(df_final$pop_total)
-    , guide = guide_legend(override.aes = list(colour = "#5d5d5d", alpha = 1))
+    range = c(1,10)
+    , breaks = fivenum(df_final$pop_total)[-2]
+    , labels = fivenum(df_final$pop_total)[-2]
+    , guide = guide_legend(order = 2, 
+                           override.aes = list(colour = "#5d5d5d", alpha = 1))
   ) +
   scale_x_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1)
+    , expand = expansion(add = c(0.02, 0.05))
+  ) +
+  scale_y_continuous(
+    expand = expansion(add = c(5,5))
   ) +
   #scale_color_viridis_d() +
   #scale_fill_viridis_d() +
   labs(
     #subtitle = "Alta complexidade - Transporte público",
      x = "Proporção População Negra"
-    , y = "Estabelecimentos de Alta Complexidade\n acessíveis até 30 min transporte público"
-    , fill = "Quintil de renda\n1 (menor) a 5 (maior)"
-    , colour = "Quintil de renda\n1 (menor) a 5 (maior)"
+    , y = "Quantidade de estabelecimentos" #"Estabelecimentos Alta Complexidade\n acessíveis em até 30 min Transporte Público"
+    , fill = "Quintil de renda\n (Menor-Maior)" #"Quintil de renda\n1 (menor) a 5 (maior)"
+    , colour = "Quintil de renda\n (Menor-Maior)"
+    , size = "População\nHexágono"
     ) #+
-  guides(
+  #guides(
+  #  fill = guide_legend(order = 1)
+  #  , size = guide_legend(order = 2)
+  #  , colour = guide_legend(order = 1)
+
     #size = guide_legend(override.aes = list(size = c(1,5,10)))
     #,fill = guide_legend(override.aes = list(size = 3, alpha = 0.8))
+  #)
+  
+#)
+  
+
+# * save plot -------------------------------------------------------------
+
+  png(here::here("figures", "cma_prop_negro_alta_complex_hexagonos.png"),
+      width = 16.5, height = 19, units = "cm", res = 600, type = "cairo"
   )
-
-
-# * density ---------------------------------------------------------------
-# ALTA
-df_final[mode == "transit"] %>% 
-  ggplot(aes(x = CMASA30, group = class_race, fill = class_race))+
-  geom_density(adjust = 1.5, alpha = 0.3) +
-  facet_wrap(~city, ncol = 5, scales = "free") +
-  #lemon::coord_capped_cart(bottom = "both", left = "both") +
-  hrbrthemes::theme_ipsum() +
-  scale_fill_viridis_d() +
-  labs(subtitle = "Alta complexidade - Transporte público")
-
-
-
+  
+  gg_final
+  
+  dev.off()
+  
