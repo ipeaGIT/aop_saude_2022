@@ -80,11 +80,18 @@ aop_colors <- c(
   `ipea6`       = '#2F6280',
   `ipea7`       = '#063754',
   
-  # cleveland
-  `clevel1`       = '#FF3A3A', # red leve
-  `clevel2`       = '#8F0303', # red forte
-  `clevel3`       = '#839192', # cinza leve
-  `clevel4`       = '#515A5A', # cinza forte
+  # # cleveland
+  # `clevel1`       = '#FF3A3A', # red leve
+  # `clevel2`       = '#8F0303', # red forte
+  # `clevel3`       = '#839192', # cinza leve
+  # `clevel4`       = '#515A5A', # cinza forte
+
+  ### animals
+  # qualitativo
+  `clevel1`       = '#C29365',  # red leve+
+  `clevel2`       = '#620C1A',  # red forte
+  `clevel3`      = '#6A9BB3',   # blue leve+
+  `clevel4`       = '#111F4F',  # blue forte
   
   # cleveland2
   `vclevel1`       = '#FF3A3A', # red leve

@@ -153,7 +153,7 @@ CMASA30_car_plot <- ggplot(tmp_plot)+
     ,x = "Razão de Palma"
     , y = NULL)+
   geom_text(aes(x = RP_CMASA30,y = city_f,
-                label = round(RP_CMASA30,1))#,label.size = 0, 
+                label = round(RP_CMASA30,1)),
             hjust = -0.2,size = 3.25,fontface = "bold",
             position = position_dodge(width = 1))+
   aop_style()
@@ -165,7 +165,7 @@ CMASA30_car_plot
 CMASA30_car_plot + CMASA30_transit_plot +
   plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
 ggsave(filename = "figures/RP_car_transit.png",
-       width = 34,height = 20,scale = 0.8,units = "cm")
+       width = 34,height = 20,scale = 0.8,units = "cm",bg = "white",dpi = 300)
 
 # # PLOT 3 = RP walk X CMASB30 ----
 # 
