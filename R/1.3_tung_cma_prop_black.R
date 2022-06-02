@@ -84,6 +84,8 @@ df_final <- dplyr::left_join(
 df_final <- subset(df_final, quintil != 0)
 
 # add mean ----------------------------------------------------------------
+666666666 CORRIGIR ORDEM
+
 df_median <- df_final[
   mode == "transit", 
   .(median_cma = median(CMASA30, na.rm = T),
@@ -91,6 +93,46 @@ df_median <- df_final[
   by = .(city)
   ]
 
+city_nomes <- df_median$city
+
+df_median <- df_median %>% 
+  arrange(median_prop)
+
+df_final[
+  df_median,
+  median_prop := i.median_prop,
+  on = "city"
+]
+
+df_final <- df_final[complete.cases(df_final)]
+
+df_final[, city := factor(city, ordered = T)]
+df_final[, city := reorder(city, median_prop)]
+
+
+# df_final[
+#   ,
+#   city := factor(
+#     x = city, 
+#     labels = c(
+#       "bho" = "Belo Horizonte"
+#       , "cam" = "Campinas"
+#       , "cur" = "Curitiba"
+#       , "for" = "Fortaleza"
+#       , "goi" = "Goiânia"
+#       , "poa" = "Porto Alegre"
+#       , "rec" = "Recife"
+#       , "rio" = "Rio de Janeiro"
+#       , "sal" = "Salvador"
+#       , "spo" = "São Paulo"
+#     )
+#       )
+# ]
+
+# df_final[
+#   ,
+#   city := forcats::fct_reorder(df_final$city, df_final$median_prop, na.rm = T)
+# ]
 
 # add labels ---------------------------------------------------------------
 # df_label <- data.table(
@@ -99,6 +141,9 @@ df_median <- df_final[
 #   , CMASA30 = 35
 #   , label = "Mediana"
 # )
+
+# set city as factor (for ordering)
+
 
 df_label <- data.table(
   city = "bho"
@@ -120,8 +165,10 @@ city.transport.labs <- c(
   , "São Paulo"
 )
 
-names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
-  sort()
+names(city.transport.labs) <- city_nomes
+
+# names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
+#   sort()
 
 
 
@@ -192,9 +239,9 @@ names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$cit
     , legend.box.margin = margin(t = -0.25, unit = "cm")
     
     , panel.spacing.y = unit(0, "cm")
-    , panel.spacing.x = unit(0.5, "cm")
+    , panel.spacing.x = unit(0.75, "cm")
     
-    , plot.margin = unit(c(0.5,0.75,0.5,0.75), "cm") # t r b l
+    , plot.margin = unit(c(0.5,1,0.5,1), "cm") # t r b l
   ) +
   scale_colour_brewer(
     palette = "RdYlBu"
