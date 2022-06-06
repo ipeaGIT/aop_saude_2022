@@ -6,7 +6,7 @@ library(tidyverse)
 library(sf)
 library(aopdata)
 library(patchwork)
-library(mapview)
+#library(mapview)
 library(Hmisc)
 library(hrbrthemes)
 library(lemon)
@@ -83,49 +83,60 @@ df_final <- dplyr::left_join(
 
 df_final <- subset(df_final, quintil != 0)
 
-# add mean ----------------------------------------------------------------
-666666666 CORRIGIR ORDEM
+# filter data ----------------------------------------------------------------
 
-df_median <- df_final[
-  mode == "transit", 
-  .(median_cma = median(CMASA30, na.rm = T),
-    median_prop = median(prop_negra, na.rm = T)), 
-  by = .(city)
-  ]
+# filter public transport cities only
+df_final <- subset(df_final, mode == "transit")
 
-city_nomes <- df_median$city
-
-df_median <- df_median %>% 
-  arrange(median_prop)
-
+# add median
 df_final[
-  df_median,
-  median_prop := i.median_prop,
-  on = "city"
+  ,
+  `:=`(
+    #median_cma = median(CMASA30, na.rm = T),
+    median_prop = median(prop_negra, na.rm = T)
+    ), 
+  by = .(city)
 ]
-
-df_final <- df_final[complete.cases(df_final)]
 
 df_final[, city := factor(city, ordered = T)]
 df_final[, city := reorder(city, median_prop)]
+# df_final[
+#   , 
+#   city := factor(
+#     x = city,
+#     labels = c(
+#       "Porto Alegre"
+#       , "Curitiba"
+#       , "Campinas"
+#       , "São Paulo"
+#       , "Goiânia"
+#       , "Rio de Janeiro"
+#       , "Belo Horizonte"
+#       , "Recife"
+#       , "Fortaleza"
+#       , "Salvador"
+#     )
+#   )
+# ]
+
 
 
 # df_final[
 #   ,
 #   city := factor(
 #     x = city, 
-#     labels = c(
-#       "bho" = "Belo Horizonte"
-#       , "cam" = "Campinas"
-#       , "cur" = "Curitiba"
-#       , "for" = "Fortaleza"
-#       , "goi" = "Goiânia"
-#       , "poa" = "Porto Alegre"
-#       , "rec" = "Recife"
-#       , "rio" = "Rio de Janeiro"
-#       , "sal" = "Salvador"
-#       , "spo" = "São Paulo"
-#     )
+    # labels = c(
+    #   "bho" = "Belo Horizonte"
+    #   , "cam" = "Campinas"
+    #   , "cur" = "Curitiba"
+    #   , "for" = "Fortaleza"
+    #   , "goi" = "Goiânia"
+    #   , "poa" = "Porto Alegre"
+    #   , "rec" = "Recife"
+    #   , "rio" = "Rio de Janeiro"
+    #   , "sal" = "Salvador"
+    #   , "spo" = "São Paulo"
+    # )
 #       )
 # ]
 
@@ -133,6 +144,12 @@ df_final[, city := reorder(city, median_prop)]
 #   ,
 #   city := forcats::fct_reorder(df_final$city, df_final$median_prop, na.rm = T)
 # ]
+
+df_median <- df_final[
+  ,
+  .(median_prop = unique(median_prop)),
+  by = .(city)
+]
 
 # add labels ---------------------------------------------------------------
 # df_label <- data.table(
@@ -144,30 +161,35 @@ df_final[, city := reorder(city, median_prop)]
 
 # set city as factor (for ordering)
 
+df_label <- df_final[
+  city == "poa",
+  .(CMASA30 = 40, prop_negra = median(prop_negra), label = "Mediana"),
+  by = city
+]
 
-df_label <- data.table(
-  city = "bho"
-  , prop_negra = df_median[city=="bho", median_prop]
-  , CMASA30 = 40
-  , label = "Mediana"
+# df_label <- data.table(
+#   city = "bho"
+#   , prop_negra = df_median[city=="bho", median_prop]
+#   , CMASA30 = 40
+#   , label = "Mediana"
+# )
+
+city_labels <- c(
+  "poa" = "Porto Alegre"
+  , "cur" = "Curitiba"
+  , "cam" = "Campinas"
+  , "spo" = "São Paulo"
+  , "goi" = "Goiânia"
+  , "rio" = "Rio de Janeiro"
+  , "bho" = "Belo Horizonte"
+  , "rec" = "Recife"
+  , "for" = "Fortaleza"
+  , "sal" = "Salvador"
 )
+  
+  
 
-city.transport.labs <- c(
-  "Belo Horizonte"
-  , "Campinas"
-  , "Curitiba"
-  , "Fortaleza"
-  , "Goiânia"
-  , "Porto Alegre"
-  , "Recife"
-  , "Rio de Janeiro"
-  , "Salvador"
-  , "São Paulo"
-)
-
-names(city.transport.labs) <- city_nomes
-
-# names(city.transport.labs) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
+# names(city_labels) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
 #   sort()
 
 
@@ -180,9 +202,12 @@ names(city.transport.labs) <- city_nomes
 
 # * grafico final -------------------------------------------------------
 
+# city := reorder(city, median_prop)
+
 # ALTA
-#(
-  gg_final <- df_final[mode == "transit"] %>% 
+(
+  gg_final <- 
+  df_final %>% 
   ggplot(
     aes(
       x = prop_negra
@@ -191,7 +216,7 @@ names(city.transport.labs) <- city_nomes
       , fill = as.factor(quintil)
       , size = pop_total
       )
-    )+
+    ) +
   geom_point(
     shape = 21
     , alpha = 0.075
@@ -216,41 +241,47 @@ names(city.transport.labs) <- city_nomes
     ) +
   #scale_size(range = c(1, 10)) +
   lemon::facet_rep_wrap(
-    ~city, ncol = 2, nrow = 5, labeller = labeller(city = city.transport.labs)
+    ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels),
+    repeat.tick.labels = T
     ) +
-  lemon::coord_capped_cart(bottom = "both", left = "both") +
+  lemon::coord_capped_cart(
+    bottom = "both"
+    #, left = "both"
+    ) +
   hrbrthemes::theme_ipsum() +
-  theme(
+    theme(
       panel.grid.minor = element_blank()
-    , panel.grid.major = element_blank()
-    
-    , axis.line.x = element_line(size = 0.1, color = "grey")
-    , axis.line.y = element_line(size = 0.1, color = "grey")
-    , axis.title.y = element_text(margin = margin(r = 0.2, unit = "cm")
-                                  , size = 10)
-    , axis.title.x = element_text(margin = margin(t = 0.2, unit = "cm")
-                                  , size = 10)
-    
-    , legend.position = "bottom"
-    , legend.box = "horizontal"
-    , legend.spacing.y = unit(0, "cm")
-    , legend.spacing.x = unit(0.05, "cm")
-    , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
-    , legend.box.margin = margin(t = -0.25, unit = "cm")
-    
-    , panel.spacing.y = unit(0, "cm")
-    , panel.spacing.x = unit(0.75, "cm")
-    
-    , plot.margin = unit(c(0.5,1,0.5,1), "cm") # t r b l
-  ) +
+      , panel.grid.major = element_blank()
+      
+      , axis.line.x = element_line(size = 0.1, color = "azure4")
+      #, axis.line.y = element_line(size = 0.1, color = "grey")
+      , axis.title.y = element_text(margin = margin(r = 0.2, unit = "cm")
+                                    , size = 10)
+      , axis.title.x = element_text(margin = margin(t = 0.2, unit = "cm")
+                                    , size = 10)
+      
+      , legend.position = "bottom"
+      , legend.box = "horizontal"
+      , legend.spacing.y = unit(0, "cm")
+      , legend.spacing.x = unit(0.05, "cm")
+      , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
+      , legend.box.margin = margin(t = -0.25, unit = "cm")
+      
+      , panel.spacing.y = unit(0.25, "cm")
+      , panel.spacing.x = unit(1.5, "cm")
+      , strip.switch.pad.wrap = unit(-5, "cm")
+      , strip.background = element_blank()
+      
+      , plot.margin = unit(c(0.25,1,0.25,1), "cm") # t r b l
+    ) +
   scale_colour_brewer(
     palette = "RdYlBu"
-    , guide = guide_legend(order = 1,
+    , guide = guide_legend(order = 1, reverse = T,
                            override.aes = list(alpha = 1, size = 4, colour = "black"))
     ) +
   scale_fill_brewer(
     palette = "RdYlBu"
-    , guide = guide_legend(order = 1,
+    , guide = guide_legend(order = 1, reverse = T,
                            override.aes = list(alpha = 1, size = 4))
     ) +
   #scale_colour_aop(palette = "blue_red") +
@@ -278,8 +309,8 @@ names(city.transport.labs) <- city_nomes
     #subtitle = "Alta complexidade - Transporte público",
      x = "Proporção População Negra"
     , y = "Quantidade de estabelecimentos" #"Estabelecimentos Alta Complexidade\n acessíveis em até 30 min Transporte Público"
-    , fill = "Quintil de renda\n (Menor-Maior)" #"Quintil de renda\n1 (menor) a 5 (maior)"
-    , colour = "Quintil de renda\n (Menor-Maior)"
+    , fill = "Quintil de renda\n (Maior-Menor)" #"Quintil de renda\n1 (menor) a 5 (maior)"
+    , colour = "Quintil de renda\n (Maior-Menor)"
     , size = "População\nHexágono"
     ) #+
   #guides(
@@ -291,8 +322,135 @@ names(city.transport.labs) <- city_nomes
     #,fill = guide_legend(override.aes = list(size = 3, alpha = 0.8))
   #)
   
-#)
+)
   
+# * grafico s/ size -------------------------------------------------------
+
+# city := reorder(city, median_prop)
+
+# ALTA
+(
+  gg_final_s_size <- 
+    df_final %>% 
+    ggplot(
+      aes(
+        x = prop_negra
+        , y = CMASA30
+        , colour = as.factor(quintil)
+        , fill = as.factor(quintil)
+        #, size = pop_total
+      )
+    ) +
+    geom_point(
+      shape = 21
+      , alpha = 0.075
+    ) + 
+    geom_vline(
+      data = df_median
+      , aes(xintercept = median_prop)
+      , linetype = "dashed"
+      , colour = "#5d5d5d"
+    ) +
+    ggtext::geom_richtext(
+      data = df_label, 
+      aes(
+        x = prop_negra
+        , y = CMASA30
+        , label = label
+      )
+      , colour = "black"
+      , size = 3.75
+      , inherit.aes = F
+      , family = "Arial Narrow"
+    ) +
+    #scale_size(range = c(1, 10)) +
+    # facet_wrap(
+    #   ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels)
+    # ) +
+    lemon::facet_rep_wrap(
+      ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels),
+      repeat.tick.labels = T
+    ) +
+    lemon::coord_capped_cart(
+      bottom = "both"
+      #, left = "both"
+    ) +
+    hrbrthemes::theme_ipsum() +
+    theme(
+      panel.grid.minor = element_blank()
+      , panel.grid.major = element_blank()
+      
+      , axis.line.x = element_line(size = 0.1, color = "azure4")
+      #, axis.line.y = element_line(size = 0.1, color = "grey")
+      , axis.title.y = element_text(margin = margin(r = 0.2, unit = "cm")
+                                    , size = 10)
+      , axis.title.x = element_text(margin = margin(t = 0.2, unit = "cm")
+                                    , size = 10)
+      
+      , legend.position = "bottom"
+      , legend.box = "horizontal"
+      , legend.spacing.y = unit(0, "cm")
+      , legend.spacing.x = unit(0.05, "cm")
+      , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
+      , legend.box.margin = margin(t = -0.25, unit = "cm")
+      
+      , panel.spacing.y = unit(0.25, "cm")
+      , panel.spacing.x = unit(1.5, "cm")
+      , strip.switch.pad.wrap = unit(-5, "cm")
+      , strip.background = element_blank()
+      
+      , plot.margin = unit(c(0.25,1,0.25,1), "cm") # t r b l
+    ) +
+    scale_colour_brewer(
+      palette = "RdYlBu"
+      , guide = guide_legend(order = 1, reverse = T,
+                             override.aes = list(alpha = 1, size = 4, colour = "black"))
+    ) +
+    scale_fill_brewer(
+      palette = "RdYlBu"
+      , guide = guide_legend(order = 1, reverse = T,
+                             override.aes = list(alpha = 1, size = 4))
+    ) +
+    #scale_colour_aop(palette = "blue_red") +
+    #scale_fill_aop(
+    #  palette = "blue_red"
+    #  , guide = guide_legend(override.aes = list(alpha = 0.8, size = 4))
+    #  ) +
+    # scale_size(
+    #   range = c(1,10)
+    #   , breaks = fivenum(df_final$pop_total)[-2]
+    #   , labels = fivenum(df_final$pop_total)[-2]
+    #   , guide = guide_legend(order = 2, 
+    #                          override.aes = list(colour = "#5d5d5d", alpha = 1))
+    # ) +
+    scale_x_continuous(
+      breaks = c(0, 0.25, 0.5, 0.75, 1)
+      , expand = expansion(add = c(0.02, 0.05))
+    ) +
+    scale_y_continuous(
+      expand = expansion(add = c(2.5,5))
+    ) +
+    #scale_color_viridis_d() +
+    #scale_fill_viridis_d() +
+    labs(
+      #subtitle = "Alta complexidade - Transporte público",
+      x = "Proporção População Negra"
+      , y = "Quantidade de estabelecimentos" #"Estabelecimentos Alta Complexidade\n acessíveis em até 30 min Transporte Público"
+      , fill = "Quintil de renda\n (Maior-Menor)" #"Quintil de renda\n1 (menor) a 5 (maior)"
+      , colour = "Quintil de renda\n (Maior-Menor)"
+      #, size = "População\nHexágono"
+    ) #+
+  #guides(
+  #  fill = guide_legend(order = 1)
+  #  , size = guide_legend(order = 2)
+  #  , colour = guide_legend(order = 1)
+  
+  #size = guide_legend(override.aes = list(size = c(1,5,10)))
+  #,fill = guide_legend(override.aes = list(size = 3, alpha = 0.8))
+  #)
+  
+)
+
 
 # * save plot -------------------------------------------------------------
 
@@ -301,6 +459,15 @@ names(city.transport.labs) <- city_nomes
   )
   
   gg_final
+  
+  dev.off()
+  
+  #
+  png(here::here("figures", "cma_prop_negro_alta_complex_hexagonos_SEMSIZE.png"),
+      width = 16.5, height = 19, units = "cm", res = 600, type = "cairo"
+  )
+  
+  gg_final_s_size
   
   dev.off()
   
