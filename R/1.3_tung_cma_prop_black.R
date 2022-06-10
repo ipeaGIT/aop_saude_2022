@@ -212,14 +212,16 @@ city_labels <- c(
     aes(
       x = prop_negra
       , y = CMASA30
-      , colour = as.factor(quintil)
+      #, colour = as.factor(quintil)
       , fill = as.factor(quintil)
       , size = pop_total
       )
     ) +
   geom_point(
     shape = 21
-    , alpha = 0.075
+    , alpha = 0.1 #0.075
+    #, stroke = 0
+    , colour = "#999999"#"#666666"
     ) + 
   geom_vline(
     data = df_median
@@ -274,53 +276,47 @@ city_labels <- c(
       
       , plot.margin = unit(c(0.25,1,0.25,1), "cm") # t r b l
     ) +
-  scale_colour_brewer(
-    palette = "RdYlBu"
-    , guide = guide_legend(order = 1, reverse = T,
-                           override.aes = list(alpha = 1, size = 4, colour = "black"))
-    ) +
+  # scale_colour_brewer(
+  #   palette = "RdYlBu"
+  #   , guide = guide_legend(order = 1, reverse = T,
+  #                          override.aes = list(alpha = 1, size = 4, colour = "black"))
+  #   ) +
   scale_fill_brewer(
     palette = "RdYlBu"
     , guide = guide_legend(order = 1, reverse = T,
                            override.aes = list(alpha = 1, size = 4))
     ) +
-  #scale_colour_aop(palette = "blue_red") +
-  #scale_fill_aop(
-  #  palette = "blue_red"
-  #  , guide = guide_legend(override.aes = list(alpha = 0.8, size = 4))
-  #  ) +
   scale_size(
     range = c(1,10)
-    , breaks = fivenum(df_final$pop_total)[-2]
-    , labels = fivenum(df_final$pop_total)[-2]
+    # five-number summaries (removing median): fivenum(df_final$pop_total)[-2]
+    , breaks = c(5,150,1000,9000) #fivenum(df_final$pop_total)[-2]
+    , labels = c(5,150,1000,9000) #fivenum(df_final$pop_total)[-2]fivenum(df_final$pop_total)[-2]
     , guide = guide_legend(order = 2, 
                            override.aes = list(colour = "#5d5d5d", alpha = 1))
   ) +
   scale_x_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1)
-    , expand = expansion(add = c(0.02, 0.05))
+    , expand = expansion(add = c(0.0, 0.05))
   ) +
   scale_y_continuous(
     expand = expansion(add = c(5,5))
   ) +
-  #scale_color_viridis_d() +
-  #scale_fill_viridis_d() +
   labs(
     #subtitle = "Alta complexidade - Transporte público",
      x = "Proporção População Negra"
     , y = "Quantidade de estabelecimentos" #"Estabelecimentos Alta Complexidade\n acessíveis em até 30 min Transporte Público"
     , fill = "Quintil de renda\n (Maior-Menor)" #"Quintil de renda\n1 (menor) a 5 (maior)"
-    , colour = "Quintil de renda\n (Maior-Menor)"
+    #, colour = "Quintil de renda\n (Maior-Menor)"
     , size = "População\nHexágono"
-    ) #+
-  #guides(
-  #  fill = guide_legend(order = 1)
-  #  , size = guide_legend(order = 2)
-  #  , colour = guide_legend(order = 1)
-
-    #size = guide_legend(override.aes = list(size = c(1,5,10)))
-    #,fill = guide_legend(override.aes = list(size = 3, alpha = 0.8))
-  #)
+    ) +
+  guides(
+    fill = guide_legend(
+      order = 1, reverse = T, override.aes = list(alpha = 1, size = 4, colour = "black")
+      )
+    , colour = guide_legend(
+      override.aes = list(alpha = 1, size = 4, colour = "black")
+    )
+  )
   
 )
   
@@ -428,7 +424,7 @@ city_labels <- c(
       , expand = expansion(add = c(0.02, 0.05))
     ) +
     scale_y_continuous(
-      expand = expansion(add = c(2.5,5))
+      expand = expansion(add = c(5,5))
     ) +
     #scale_color_viridis_d() +
     #scale_fill_viridis_d() +
