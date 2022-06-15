@@ -88,6 +88,9 @@ df_final <- subset(df_final, quintil != 0)
 # filter public transport cities only
 df_final <- subset(df_final, mode == "transit")
 
+# remove salvador (due to GTFS data)
+df_final <- subset(df_final, city != "sal")
+
 # add median
 df_final[
   ,
@@ -163,7 +166,7 @@ df_median <- df_final[
 
 df_label <- df_final[
   city == "poa",
-  .(CMASA30 = 40, prop_negra = median(prop_negra), label = "Mediana"),
+  .(CMASA30 = 40, prop_negra = median(prop_negra) + 0.05, label = "Mediana"),
   by = city
 ]
 
@@ -184,14 +187,10 @@ city_labels <- c(
   , "bho" = "Belo Horizonte"
   , "rec" = "Recife"
   , "for" = "Fortaleza"
-  , "sal" = "Salvador"
 )
   
-  
-
 # names(city_labels) <- df_final[mode == "transit",logical(1),by=city]$city %>% 
 #   sort()
-
 
 
 # grafico -----------------------------------------------------------------
@@ -243,7 +242,7 @@ city_labels <- c(
     ) +
   #scale_size(range = c(1, 10)) +
   lemon::facet_rep_wrap(
-    ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels),
+    ~city, ncol = 3, labeller = labeller(city = city_labels),
     repeat.tick.labels = T
     ) +
   lemon::coord_capped_cart(
@@ -269,8 +268,8 @@ city_labels <- c(
       , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
       , legend.box.margin = margin(t = -0.25, unit = "cm")
       
-      , panel.spacing.y = unit(0.25, "cm")
-      , panel.spacing.x = unit(1.5, "cm")
+      , panel.spacing.y = unit(0.75, "cm")
+      , panel.spacing.x = unit(0.75, "cm")
       , strip.switch.pad.wrap = unit(-5, "cm")
       , strip.background = element_blank()
       
@@ -287,7 +286,7 @@ city_labels <- c(
                            override.aes = list(alpha = 1, size = 4))
     ) +
   scale_size(
-    range = c(1,10)
+    range = c(1,8)
     # five-number summaries (removing median): fivenum(df_final$pop_total)[-2]
     , breaks = c(5,150,1000,9000) #fivenum(df_final$pop_total)[-2]
     , labels = c(5,150,1000,9000) #fivenum(df_final$pop_total)[-2]fivenum(df_final$pop_total)[-2]
@@ -296,10 +295,10 @@ city_labels <- c(
   ) +
   scale_x_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1)
-    , expand = expansion(add = c(0.0, 0.05))
+    , expand = expansion(add = c(0.05, 0.05))
   ) +
   scale_y_continuous(
-    expand = expansion(add = c(5,5))
+    expand = expansion(add = c(2.5,5))
   ) +
   labs(
     #subtitle = "Alta complexidade - Transporte público",
@@ -364,7 +363,7 @@ city_labels <- c(
     #   ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels)
     # ) +
     lemon::facet_rep_wrap(
-      ~city, ncol = 2, nrow = 5, labeller = labeller(city = city_labels),
+      ~city, ncol = 3, labeller = labeller(city = city_labels),
       repeat.tick.labels = T
     ) +
     lemon::coord_capped_cart(
@@ -390,8 +389,8 @@ city_labels <- c(
       , legend.text = element_text(margin = margin(t = 0, b = 0, unit = "cm"))
       , legend.box.margin = margin(t = -0.25, unit = "cm")
       
-      , panel.spacing.y = unit(0.25, "cm")
-      , panel.spacing.x = unit(1.5, "cm")
+      , panel.spacing.y = unit(0.75, "cm")
+      , panel.spacing.x = unit(0.75, "cm")
       , strip.switch.pad.wrap = unit(-5, "cm")
       , strip.background = element_blank()
       
@@ -420,12 +419,12 @@ city_labels <- c(
     #                          override.aes = list(colour = "#5d5d5d", alpha = 1))
     # ) +
     scale_x_continuous(
-      breaks = c(0, 0.25, 0.5, 0.75, 1)
-      , expand = expansion(add = c(0.02, 0.05))
+    breaks = c(0, 0.25, 0.5, 0.75, 1)
+    , expand = expansion(add = c(0.05, 0.05))
     ) +
     scale_y_continuous(
-      expand = expansion(add = c(5,5))
-    ) +
+      expand = expansion(add = c(2.5,5))
+    )+
     #scale_color_viridis_d() +
     #scale_fill_viridis_d() +
     labs(
@@ -451,16 +450,16 @@ city_labels <- c(
 # * save plot -------------------------------------------------------------
 
   png(here::here("figures", "cma_prop_negro_alta_complex_hexagonos.png"),
-      width = 16.5, height = 19, units = "cm", res = 600, type = "cairo"
+      width = 16.5, height = 16.5, units = "cm", res = 300, type = "cairo"
   )
-  
-  gg_final
-  
-  dev.off()
-  
-  #
-  png(here::here("figures", "cma_prop_negro_alta_complex_hexagonos_SEMSIZE.png"),
-      width = 16.5, height = 19, units = "cm", res = 600, type = "cairo"
+
+gg_final
+
+dev.off()
+
+#
+png(here::here("figures", "cma_prop_negro_alta_complex_hexagonos_SEMSIZE.png"),
+    width = 16.5, height = 16.5, units = "cm", res = 300, type = "cairo"
   )
   
   gg_final_s_size
