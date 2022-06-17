@@ -338,7 +338,9 @@ city_labels <- c(
     ) +
     geom_point(
       shape = 21
-      , alpha = 0.075
+      , alpha = 0.1 #0.075
+      #, stroke = 0
+      , colour = "#999999"#"#666666"
     ) + 
     geom_vline(
       data = df_median
