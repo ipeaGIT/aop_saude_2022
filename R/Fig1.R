@@ -19,7 +19,7 @@ library(aopdata)
 library(geobr)
 
 
-setwd("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019")
+#setwd("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019")
 
 ##### mapa de distribuicao de estabelecimentos de saúde #####
 distrib_saude <- function(cidade, legenda){
@@ -87,11 +87,11 @@ saude_rio <- distrib_saude("rio", "sim")
 
 distrib_renda <- function(cidade, legenda){
 
-  df <- readRDS(paste0("hex_agregado_",cidade,"_09_2019.rds")) %>%
+  df <- aopdata::read_landuse(city=cidade, geometry = T)%>%
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857) %>%
-    mutate(quintil = as.character(quintil))
+    mutate(quintil = as.character(R002))
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   
@@ -134,12 +134,12 @@ renda_rio <- distrib_renda("rio", "sim")
 
 distrib_pop_negra <- function(cidade, legenda){
   
-  df <- readRDS(paste0("hex_agregado_",cidade,"_09_2019.rds")) %>%
+  df <- aopdata::read_landuse(city=cidade, geometry = T)%>%
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857)%>%
-    filter(pop_total > 0) %>%
-    mutate(prop_pop_negra = (cor_negra)/pop_total)
+    filter(P001 > 0) %>%
+    mutate(prop_pop_negra = (P003)/P001)
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   
@@ -149,7 +149,7 @@ distrib_pop_negra <- function(cidade, legenda){
     scale_fill_identity()+
     # nova escala
     new_scale_fill() + 
-    geom_sf(data=subset(df,pop_total>0), aes(fill=prop_pop_negra), color=NA, alpha=1) +
+    geom_sf(data=subset(df,P001>0), aes(fill=prop_pop_negra), color=NA, alpha=1) +
     viridis::scale_fill_viridis(
       direction = 1
       , option = "inferno"

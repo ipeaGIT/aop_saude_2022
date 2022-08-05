@@ -17,23 +17,9 @@ library(stringi)
 library(ggspatial)
 
 
-setwd("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019")
-
-for_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_for_all_access-all.rds")
-cur_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_cur_all_access-all.rds")
-rio_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_rio_all_access-all.rds")
-
-######
-
-
-######## join com os dados socioeconomicos por hexagono ########## 
-for_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_for_09_2019.rds") %>% st_drop_geometry()
-cur_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_cur_09_2019.rds") %>% st_drop_geometry()
-rio_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_rio_09_2019.rds") %>% st_drop_geometry()
-
-for_ <- dplyr::left_join(for_, for_hex, by=c("origin"="id_hex"))
-cur_ <- dplyr::left_join(cur_, cur_hex, by=c("origin"="id_hex"))
-rio_ <- dplyr::left_join(rio_, rio_hex, by=c("origin"="id_hex"))
+for_ <- aopdata::read_access(city="for", mode = "public_transport",geometry = T)
+cur_ <- aopdata::read_access(city="cur", mode = "public_transport", geometry = T)
+rio_ <- aopdata::read_access(city="rio", mode = "public_transport", geometry = T)
 
 
 #####
@@ -46,14 +32,14 @@ TMI <- function(cidade, modo, medida, legenda, maxtempo){
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857) %>%
-    filter(city == cidade,
+    filter(abbrev_muni == cidade,
            mode == modo,
-           pico ==1,
+           peak ==1,
            !is.infinite(medida),
            !is.na(medida),
-           pop_total >0) %>%
+           P001 >0) %>%
     mutate(TMISA = ifelse(TMISA > maxtempo, maxtempo, TMISA)) %>%
-    dplyr::select(origin, city,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60, CMASA90)
+    dplyr::select(id_hex, abbrev_muni,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60)
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   
@@ -95,14 +81,14 @@ CMA <- function(cidade, modo, medida, legenda, maxtempo){
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857) %>%
-    filter(city == cidade,
+    filter(abbrev_muni == cidade,
            mode == modo,
-           pico ==1,
+           peak ==1,
            !is.infinite(medida),
            !is.na(medida),
-           pop_total >0) %>%
+           P001 >0) %>%
     mutate(CMASA60 = ifelse(CMASA60 > maxtempo, maxtempo, CMASA60)) %>%
-    dplyr::select(origin, city,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60, CMASA90)
+    dplyr::select(id_hex, abbrev_muni,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60)
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   
@@ -138,13 +124,13 @@ CMA <- function(cidade, modo, medida, legenda, maxtempo){
 
 ######## Rodando mapas
 
-TMI_cur <- TMI("cur", "transit","TMISA","titulo",60)
-TMI_for <- TMI("for","transit","TMISA", "nao", 60)
-TMI_rio <- TMI("rio", "transit","TMISA", "sim", 60)
+TMI_cur <- TMI("cur", "public_transport","TMISA","titulo",60)
+TMI_for <- TMI("for","public_transport","TMISA", "nao", 60)
+TMI_rio <- TMI("rio", "public_transport","TMISA", "sim", 60)
 
-cma_cur <- CMA("cur", "transit","CMASA60","titulo",40) ### maximo de oportunidades em curitiba é de 36
-cma_for <- CMA("for","transit","CMASA60", "nao", 40)
-cma_rio <- CMA("rio", "transit","CMASA60", "sim", 40)
+cma_cur <- CMA("cur", "public_transport","CMASA60","titulo",40) ### maximo de oportunidades em curitiba é de 36
+cma_for <- CMA("for","public_transport","CMASA60", "nao", 40)
+cma_rio <- CMA("rio", "public_transport","CMASA60", "sim", 40)
 
 
 ####################################################################

@@ -17,21 +17,9 @@ library(stringi)
 library(ggspatial)
 
 
-setwd("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019")
-
-for_car <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/car/acess_2019_for_car_access-all.rds")
-cur_car <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/car/acess_2019_cur_car_access-all.rds")
-rio_car <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/car/acess_2019_rio_car_access-all.rds")
-
-######## join com os dados socioeconomicos por hexagono ########## 
-for_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_for_09_2019.rds") %>% st_drop_geometry()
-cur_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_cur_09_2019.rds") %>% st_drop_geometry()
-rio_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_rio_09_2019.rds") %>% st_drop_geometry()
-
-for_ <- dplyr::left_join(for_car, for_hex, by=c("origin"="id_hex"))
-cur_ <- dplyr::left_join(cur_car, cur_hex, by=c("origin"="id_hex"))
-rio_ <- dplyr::left_join(rio_car, rio_hex, by=c("origin"="id_hex"))
-
+for_ <- aopdata::read_access(city="for", mode = "car",geometry = T)
+cur_ <- aopdata::read_access(city="cur", mode = "car", geometry = T)
+rio_ <- aopdata::read_access(city="rio", mode = "car", geometry = T)
 
 #####
 
@@ -43,14 +31,14 @@ TMI <- function(cidade, modo, medida, legenda, maxtempo){
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857) %>%
-    filter(city == cidade,
+    filter(abbrev_muni == cidade,
            mode == modo,
-           pico ==1,
+           peak ==1,
            !is.infinite(medida),
            !is.na(medida),
-           pop_total >0) %>%
+           P001 >0) %>%
     mutate(TMISA = ifelse(TMISA > maxtempo, maxtempo, TMISA)) %>%
-    dplyr::select(origin, city,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60, CMASA90)
+    dplyr::select(id_hex, abbrev_muni,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60)
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   
@@ -92,14 +80,14 @@ CMA <- function(cidade, modo, medida, legenda, maxtempo){
     st_as_sf()%>%
     st_set_crs(4326) %>%
     st_transform(3857) %>%
-    filter(city == cidade,
+    filter(abbrev_muni == cidade,
            mode == modo,
-           pico ==1,
+           peak ==1,
            !is.infinite(medida),
            !is.na(medida),
-           pop_total >0) %>%
+           P001 >0) %>%
     mutate(CMASA15 = ifelse(CMASA15 > maxtempo, maxtempo, CMASA15)) %>%
-    dplyr::select(origin, city,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60, CMASA90)
+    dplyr::select(id_hex, abbrev_muni,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60)
   
   map_tiles <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_", cidade,"_2019.rds"))
   

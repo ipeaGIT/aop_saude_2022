@@ -13,22 +13,10 @@ library(purrr)
 library(ggsn)
 library(patchwork)
 
-setwd("~/data2")
-
 ######### utilizado para calcular CMASA60 para TP
-for_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_for_all_access-all.rds")
-cur_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_cur_all_access-all.rds")
-rio_ <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/output_access/2019/tp_active/acess_2019_rio_all_access-all.rds")
-
-
-######## join com os dados socioeconomicos por hexagono ########## 
-for_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_for_09_2019.rds") %>% st_drop_geometry()
-cur_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_cur_09_2019.rds") %>% st_drop_geometry()
-rio_hex <- readRDS("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/hex_agregados/2019/hex_agregado_rio_09_2019.rds") %>% st_drop_geometry()
-
-for_ <- dplyr::left_join(for_, for_hex, by=c("origin"="id_hex"))
-cur_ <- dplyr::left_join(cur_, cur_hex, by=c("origin"="id_hex"))
-rio_ <- dplyr::left_join(rio_, rio_hex, by=c("origin"="id_hex"))
+for_ <- aopdata::read_access(city="for", geometry = T)
+cur_ <- aopdata::read_access(city="cur", geometry = T)
+rio_ <- aopdata::read_access(city="rio", geometry = T)
 
 
 #####
@@ -38,15 +26,15 @@ aop <- aop %>%
   st_as_sf()%>%
   st_set_crs(4326) %>%
   st_transform(3857) %>%
-  filter(city %in% c("for", "cur", "rio"),
+  filter(abbrev_muni %in% c("for", "cur", "rio"),
          mode == "walk",
-         pico ==1,
+         peak ==1,
          !is.infinite("TMISB"),
          !is.na("TMISB"),
-         pop_total >0) %>%
-  mutate(TMISB = ifelse(city == "rio" & TMISB > 30, 30, TMISB),
-         TMISB = ifelse(city != "rio" & TMISB > 30, 30, TMISB)) %>%
-  dplyr::select(origin, city,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60, CMASA90)
+         P001 >0) %>%
+  mutate(TMISB = ifelse(abbrev_muni == "rio" & TMISB > 30, 30, TMISB),
+         TMISB = ifelse(abbrev_muni != "rio" & TMISB > 30, 30, TMISB)) %>%
+  dplyr::select(id_hex, abbrev_muni,mode, TMISB, TMISM, TMISA, CMASA30, CMASA15, CMASA60)
 
 map_tiles_cur <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_cur_2019.rds"))
 map_tiles_for <- readRDS(paste0("//storage6/usuarios/Proj_acess_oport/data/acesso_oport/maptiles_crop/2019/mapbox/maptile_crop_mapbox_for_2019.rds"))
@@ -61,7 +49,7 @@ plot_cur <- ggplot()+
   scale_fill_identity()+
   # nova escala
   new_scale_fill() +
-  geom_sf(data = subset(aop, city == "cur"), aes(fill = TMISB), color = NA, alpha=.7)+
+  geom_sf(data = subset(aop, abbrev_muni == "cur"), aes(fill = TMISB), color = NA, alpha=.7)+
   viridis::scale_fill_viridis(direction = -1
                               , limits = c(0, 30)
                               , breaks = c(0, 10, 20, 30)
@@ -96,7 +84,7 @@ plot_for <- ggplot()+
   scale_fill_identity()+
   # nova escala
   new_scale_fill() +
-  geom_sf(data = subset(aop, city == "for"), aes(fill = TMISB), color = NA, alpha=.7)+
+  geom_sf(data = subset(aop, abbrev_muni == "for"), aes(fill = TMISB), color = NA, alpha=.7)+
   viridis::scale_fill_viridis(direction = -1
                               , limits = c(0, 30) 
                               , breaks = c(0, 10, 20, 30)
@@ -130,7 +118,7 @@ plot_rio <- ggplot()+
   scale_fill_identity()+
   # nova escala
   new_scale_fill() +
-  geom_sf(data = subset(aop, city == "rio"), aes(fill = TMISB), color = NA, alpha=.7)+
+  geom_sf(data = subset(aop, abbrev_muni == "rio"), aes(fill = TMISB), color = NA, alpha=.7)+
   viridis::scale_fill_viridis(direction = -1
                               , limits = c(0, 30) 
                               , breaks = c(0, 10, 20, 30)
