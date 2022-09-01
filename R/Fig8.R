@@ -108,7 +108,7 @@ CMA <- function(cidade, modo, medida, legenda, maxtempo){
     annotation_scale(location = "br", width_hint = 0.2) +
     coord_sf(datum=NA) + 
     labs(title = "Quantidade de estabelecimentos",
-         fill = "Quantidade de de\nestabelecimentos") +
+         fill = "Quantidade de\nestabelecimentos") +
     if(legenda == "sim"){
       theme(legend.title = element_text(size = 12, face="bold"), plot.title = element_blank(), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank(), rect = element_blank(), axis.title.y=element_blank(),axis.title.x=element_blank(), legend.position = "bottom")
     }
