@@ -45,15 +45,16 @@ files_socio <- files_socio[(files_socio %like% "2019")]
 future::plan(strategy = "multicore",workers = 19)
 tmp_acc <- future.apply::future_lapply(files_acess,readr::read_rds) %>%
   data.table::rbindlist(fill=TRUE)
-tmp_acc <- tmp_acc[,c("origin","city","mode","pico","ano",
-                      "CMAST15","CMASB15","CMASM15","CMASA15",
-                      "CMAST30","CMASB30","CMASM30","CMASA30",
-                      "CMAST45","CMASB45","CMASM45","CMASA45",
-                      "CMAST60","CMASB60","CMASM60","CMASA60",
-                      "TMIST","TMISB","TMISM","TMISA","geometry")]
+tmp_acc <- tmp_acc[,.SD,.SDcols = c("origin","city","mode","pico","ano",
+                                    "CMAST15","CMASB15","CMASM15","CMASA15",
+                                    "CMAST30","CMASB30","CMASM30","CMASA30",
+                                    "CMAST45","CMASB45","CMASM45","CMASA45",
+                                    "CMAST60","CMASB60","CMASM60","CMASA60",
+                                    "TMIST","TMISB","TMISM","TMISA","geometry")]
 
 tmp_soc <- future.apply::future_lapply(files_socio,readr::read_rds) %>% 
   data.table::rbindlist(fill=TRUE)
+
 tmp_soc <- tmp_soc[,c("id_hex","h3_resolution","sigla_muni","ano"
                       ,"cor_branca","cor_amarela","cor_indigena","cor_negra",
                       "pop_total","renda_total","renda_capita","quintil",
@@ -88,6 +89,12 @@ tmp_join_acc <- tmp_join_acc[!is.na(mode),]
 
 # save
 dir.create("data/")
+
+# 
+read_acess(mode = walk)
+read_acess(mode = public_transport)
+read_acess(mode = car)
+
 
 readr::write_rds(tmp_join_car,"data/socio_acc-car_2019.rds",compress = "gz")
 readr::write_rds(tmp_join_acc,"data/socio_acc-all_2019.rds",compress = "gz")
