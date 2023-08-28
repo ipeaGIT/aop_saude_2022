@@ -75,7 +75,7 @@ aop_style <- function() {
 }
 
 aop_style_black <- function() {
-  font <- "Helvetica"
+  font <- "Times New Roman"
   
   ggplot2::theme(
     
