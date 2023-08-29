@@ -13,5 +13,3 @@ The R scripts to reproduce the results are divided into four stages:
 -   `style.R` and `colours.R`
     - Auxiliary scripts used in `2.1_Fig1_2_4.R` to adjust the style and colours of the Figures.
 
-
-The preprint can be accessed in [(Tomasiello et al., 2022)](https://osf.io/preprints/socarxiv/g5z7d/).
