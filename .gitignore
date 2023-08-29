@@ -1,7 +1,10 @@
 .Rproj.user
 .Rhistory
 .RData
+.Rprofile
 .Ruserdata
 data/*
 data-raw/*
+figures1/*
+R/unused/*
 .DS_Store

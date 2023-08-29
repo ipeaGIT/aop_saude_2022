@@ -87,3 +87,15 @@ setnames(tmp_join_acc
 
 # save
 readr::write_rds(tmp_join_acc,"data/socio_acc-all_2019.rds",compress = "gz")
+
+
+# 2) Download tiles ------
+
+rio_url <- "https://github.com/ipeaGIT/aop_saude_2022/releases/download/v.1.0/maptile_crop_mapbox_rio_2019.rds"
+for_url <- "https://github.com/ipeaGIT/aop_saude_2022/releases/download/v.1.0/maptile_crop_mapbox_for_2019.rds"
+cur_url <- "https://github.com/ipeaGIT/aop_saude_2022/releases/download/v.1.0/maptile_crop_mapbox_cur_2019.rds"
+
+dir.create("data-raw")
+download.file(url = rio_url,destfile = "data-raw/maptile_crop_mapbox_rio_2019.rds",mode = "wb")
+download.file(url = for_url,destfile = "data-raw/maptile_crop_mapbox_for_2019.rds",mode = "wb")
+download.file(url = cur_url,destfile = "data-raw/maptile_crop_mapbox_cur_2019.rds",mode = "wb")

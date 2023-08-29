@@ -13,11 +13,11 @@ library(extrafontdb)
 library(fontcm)
 library(extrafont) 
 library(showtext)
-extrafont::font_import()
-extrafont::loadfonts(device = "win")
-windowsFonts()
-windowsFont("Times New Roman")
-extrafont::fonts()
+#extrafont::font_import()
+#extrafont::loadfonts(device = "win")
+#windowsFonts()
+#windowsFont("Times New Roman")
+#extrafont::fonts()
 
 # add style
 source('R/colours.R')
@@ -91,7 +91,7 @@ tmp_w[city == "sal" &
         mode == "public_transport" & 
         cor %in% c("cor_branca","cor_negra"
                    ,"media"),]
-# 1) walk ----
+# Figure 1) walk ----
 
 ## 1.2) TMISB | walk ----
 
@@ -125,10 +125,8 @@ tmp_plot_min <- data.table::copy(tmp_plot)[
   }
   , by = "city"]
 tmp_plot <- tmp_plot[tmp_plot_min, on ="city"]
-#tmp_plot[,TMISB := TMISB - media_time]
 tmp_city_order <- data.table::copy(tmp_plot) %>% 
   .[label == "White individuals with high income"] %>% 
-  #.[order(TMISB,decreasing = FALSE),city]
   .[order(diff_time,decreasing = FALSE),city]
 
 
@@ -290,193 +288,20 @@ tmi2 <- ggplot()+ # tracado
   )
 
 ## 1.3) P1 | walk ----------
-tmi2
-#tmi1 <- tmi1 + theme(legend.position = c(0.875,0.225))
 
 TMISB_walk_plot <- (tmi2 + theme(plot.margin = unit(c(0,2,0,0),"cm"))) / 
   (tmi1 + theme(plot.margin = unit(c(0,2,0,0),"cm")))  + 
   plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
 
-#TMISB_walk_plot
-
-#ggsave(filename = "figures/joao/walk_baixa_english.svg",
-#       width = 20,height = 35,scale = 0.6,units = "cm",bg = "white",dpi = 300)
-ggsave(filename = "figures/joao/walk_baixa_english.png",
+ggsave(filename = "figures/Fig1.png",
        width = 23,height = 35,scale = 0.6,units = "cm",bg = "white",dpi = 300)
 
-my_p_margin <- unit(c(1,2.2,0,0),"cm")
-TMISB_walk_plot <- (tmi2 + theme(legend.position = coord_plot_leg
-                                 ,plot.margin = my_p_margin)) /
-  (tmi1 + theme(legend.position = coord_plot_leg
-                ,plot.margin = my_p_margin))
-TMISB_walk_plot
-
-ggsave(filename = "figures/TMI_walk_20-20rico1_english.png",
-       width = 20,height = 35,scale = 0.6,units = "cm",bg = "white",dpi = 300)
-
-
-
-
-
-#  2) bike ----
-##  2.1) CMASB30 | bike ----
-
-
-tmp_plot <- data.table::copy(tmp_w) %>% 
-  .[ano == 2019 ] %>% 
-  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
-  .[mode %in% c("bike")] %>% 
-  .[,label := paste0(cor,"_",decil_status)] %>% 
-  .[,label := factor(label
-                     ,levels = c("cor_branca_Pobre"
-                                 ,"cor_negra_Pobre"
-                                 ,"media_media populacao"
-                                 ,"cor_branca_Rica"
-                                 ,"cor_negra_Rica"
-                     )
-                     ,labels = c("White individuals with low income"
-                                 ,"Black individuals with low income"
-                                 ,"Mean"
-                                 ,"White individuals with high income"
-                                 ,"Black individuals with high income"))] 
-
-tmp_city_order <- data.table::copy(tmp_plot) %>% 
-  .[label == "Mean"] %>% 
-  .[order(CMASB30),city]
-
-
-dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
-                                     ,"for","goi","gua","mac","man","nat","poa"
-                                     ,"rec","rio","sal","sgo","slz","spo"),
-                          labels = c("Belém","Belo Horizonte","Brasília","Campinas"
-                                     ,"Campo Grande","Curitiba","Duque de Caxias"
-                                     ,"Fortaleza","Goiânia","Guarulhos","Maceió"
-                                     ,"Manaus","Natal","Porto Alegre"
-                                     ,"Recife","Rio de Janeiro","Salvador"
-                                     ,"São Gonçalo"
-                                     ,"São Luís","São Paulo"))
-tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
-  .[1:length(tmp_city_order),labels]
-
-tmp_plot[,city_f := factor(city
-                           ,levels = tmp_city_order
-                           ,labels = tmp_city_labels)]
-
-# plot
-
-CMASB30_bike_plot <- ggplot() + 
-  geom_segment(data = tmp_plot[,list(min(CMASB30),max(CMASB30)),by = city_f]
-               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(data = tmp_plot[decil_status != "media populacao"]
-             ,aes(x = CMASB30,y = city_f
-                  ,color = label),size=2.5,alpha = 1,shape = 1,stroke = 2.)+
-  geom_point(data = tmp_plot[decil_status == "media populacao"]
-             ,aes(x = CMASB30,y = city_f)
-             ,size=2.5,shape = 3,alpha = 1,color = "grey")+
-  scale_colour_aop(palette = "clevel")+
-  labs(title = NULL
-       ,subtitle = "Cumulative Accessibility Measure"
-       ,color = "Color/race and Income"
-       ,x = "Number of opportunities"
-       , y = NULL
-       , fill = "Color/Race - Mode of transport")+
-  #guides(shape = "none")+
-  aop_style()
-
-CMASB30_bike_plot
-
-##  2.3) TMISB | bike ----
-
-tmp_plot <- data.table::copy(tmp_w) %>% 
-  .[ano == 2019 ] %>% 
-  .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
-  .[mode %in% c("bike")] %>% 
-  .[,label := paste0(cor,"_",decil_status)] %>% 
-  .[,label := factor(label
-                     ,levels = c("cor_branca_Pobre"
-                                 ,"cor_negra_Pobre"
-                                 ,"media_media populacao"
-                                 ,"cor_branca_Rica"
-                                 ,"cor_negra_Rica"
-                     )
-                     ,labels = c("White individuals with low income"
-                                 ,"Black individuals with low income"
-                                 ,"Mean"
-                                 ,"White individuals with high income"
-                                 ,"Black individuals with high income"))] 
-
-tmp_city_order <- data.table::copy(tmp_plot) %>% 
-  .[label == "Mean"] %>% 
-  .[order(TMISB),city]
-
-
-dt_tmp_city <- data.table(levels = c("bel","bho","bsb","cam","cgr","cur","duq"
-                                     ,"for","goi","gua","mac","man","nat","poa"
-                                     ,"rec","rio","sal","sgo","slz","spo"),
-                          labels = c("Belém","Belo Horizonte","Brasília","Campinas"
-                                     ,"Campo Grande","Curitiba","Duque de Caxias"
-                                     ,"Fortaleza","Goiânia","Guarulhos","Maceió"
-                                     ,"Manaus","Natal","Porto Alegre"
-                                     ,"Recife","Rio de Janeiro","Salvador"
-                                     ,"São Gonçalo"
-                                     ,"São Luís","São Paulo"))
-tmp_city_labels <- dt_tmp_city[order(match(levels,tmp_city_order)),] %>% 
-  .[1:length(tmp_city_order),labels]
-
-tmp_plot[,city_f := factor(city
-                           ,levels = tmp_city_order
-                           ,labels = tmp_city_labels)]
-
-# plot
-
-TMISB_bike_plot <- ggplot() + 
-  geom_segment(data = tmp_plot[,list(min(TMISB),max(TMISB)),by = city_f]
-               ,aes(x = V1,xend = V2,y = city_f,yend = city_f),color = "grey")+
-  geom_point(data = tmp_plot[decil_status != "media populacao"]
-             ,aes(x = TMISB,y = city_f
-                  ,color = label),size=2.5,alpha = 1,shape = 1,stroke = 2.)+
-  geom_point(data = tmp_plot[decil_status == "media populacao"]
-             ,aes(x = TMISB,y = city_f)
-             ,size=2.5,shape = 3,alpha = 1,color = "grey")+
-  # scale_color_manual(values = c("#b79f00","#dbcf80"
-  #                              ,"red","#89CFF0","#0000FF"))+
-  scale_colour_aop(palette = "clevel")+
-  # facet_grid(rows  = vars(mode),scales = "free")+
-  labs(#title = "Cumulative Accessibility Measure (2019)"
-    ,title = NULL
-    ,subtitle = "Minimum Travel Time"
-    ,color = "Color/race and Income"
-    ,x = "Minimum Travel Time (minutes)"
-    , y = NULL
-    , fill = "Color/Race - Mode of transport")+
-  #guides(shape = "none")+
-  aop_style()+
-  theme(legend.position = c(0.875,0.15))
-
-
-TMISB_bike_plot
-ggsave(filename = "figures/TMI_bike_40-10rico_english.png",
-       width = 17,height = 20,scale = 0.8,units = "cm")
-## 2.2) P2 | bike ----------
-
-
-CMASB30_bike_plot + TMISB_bike_plot +
-  plot_annotation(
-    title = 'Acesso a oportunidades de saúde de baixa complexidade (2019)',
-    subtitle = 'Modo bicicleta',
-    #caption = 'Disclaimer: None of these plots are insightful'
-  )
-ggsave(filename = "figures/CMASB30_TMI_bike_40-10rico_english.png",
-       width = 34,height = 20,scale = 0.8,units = "cm",bg = "white",dpi = 300)
-
-
-#  3) transit ----
-##  3.1) CMASA30 | transit ----
+#  Figure 2) transit ----
+##  2.1) CMASA30 | transit ----
 pos_nudge_y <- 0 # -0.35
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
-  #.[city != "sal"] %>% 
   .[pico  == 1] %>% 
   .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
   .[,cor_f := factor(cor
@@ -530,7 +355,6 @@ tmp_plot[,city_f := factor(city
                            ,labels = tmp_city_labels)]
 
 # plot
-
 CMASA30_transit_plot <- ggplot() + 
   # tracado
   geom_segment(
@@ -539,7 +363,7 @@ CMASA30_transit_plot <- ggplot() +
   ) +
   # pontos renda - cor
   geom_point(
-    data = tmp_plot#[decil_status != "media"]
+    data = tmp_plot
     ,aes(x = CMASA30
          ,y = city_f
          ,color = label
@@ -599,11 +423,10 @@ CMASA30_transit_plot <- ggplot() +
   )
 
 
-## 3.2)  TMISA | transit ----
+## 2.2)  TMISA | transit ----
 
 tmp_plot <- data.table::copy(tmp_w) %>% 
   .[ano == 2019 ] %>% 
-  # .[city != "sal"] %>% 
   .[pico  == 1] %>% 
   .[cor %in% c("cor_branca" ,"cor_negra","media")] %>% 
   .[mode %in% c("public_transport")] %>% 
@@ -658,7 +481,7 @@ TMISA_transit_plot <- ggplot() +
   ) +
   # pontos renda - cor
   geom_point(
-    data = tmp_plot#[decil_status != "media"]
+    data = tmp_plot
     ,aes(x = TMISA
          ,y = city_f
          ,color = label
@@ -718,30 +541,18 @@ TMISA_transit_plot <- ggplot() +
   )
 
 
-TMISA_transit_plot
-
-## 3.3) P3 | transit ----------
-
-# 
-# ggsave(filename = "figures/CMASA30_TMI_transit_20-20rico2_english.png",
-#        width = 20,height = 17,scale = .9
-#        ,units = "cm",bg = "white",dpi = 300)
+## 2.3) P3 | transit ----------
 
 (CMASA30_transit_plot + theme(legend.position = "none"))  / 
   (TMISA_transit_plot ) +
   plot_annotation(tag_levels = 'I',tag_prefix = "(",tag_suffix = ")")
 
-
-
-#ggsave(filename = "figures/joao/tp_alta_english.svg",
-#       width = 22,height = 35,scale = 0.5
-#       ,units = "cm",bg = "white",dpi = 300)
-ggsave(filename = "figures/joao/tp_alta_english.png",
+ggsave(filename = "figures/Fig2.png",
        width = 24,height = 35,scale = 0.5
        ,units = "cm",bg = "white",dpi = 300)
 
 
-#  4) car ----
+#  Figure 4) car ----
 ## 4.1)  CMASA30 | car ----
 pos_nudge_y <- 0 # -0.35
 
@@ -1094,11 +905,7 @@ p3_car <-
   plot_layout(widths = 3, heights = unit(c(4,6), c('cm')))
 #p3_car
 
-
-#ggsave(filename = "figures/joao/car_alta_english.svg",
-#       width = 20,height = 32,scale = 0.6
-#       ,units = "cm",bg = "white",dpi = 300)
-ggsave(filename = "figures/joao/car_alta_english_v1.png",
+ggsave(filename = "figures/Fig4.png",
        width = 30,height = 36,scale = 0.5
        ,units = "cm",bg = "white",dpi = 300)
 
