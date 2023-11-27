@@ -1,5 +1,13 @@
-R codes used in the research paper **"Racial and income inequalities in access to healthcare in Brazilian cities"**
+<img align="right" src="cover_jth.jpg" width="180">
 
+# Racial and income inequalities in access to healthcare in Brazilian cities
+
+R code used in the research paper:
+
+ - Tomasiello, D. B., Vieira, J. P. B., Parga, J. P. F. A., Servo, L. M. S., & Pereira, R. H. M. (2024). **Racial and income inequalities in access to healthcare in Brazilian cities**. *Journal of Transport & Health*, 34, 101722. [https://doi.org/10.1016/j.jth.2023](https://doi.org/10.1016/j.jth.2023)
+   - [Ungated PDF of the paper available here](https://www.urbandemographics.org/publication/2024_jth_racial_inequalities_access_health/).
+
+  
 The R scripts to reproduce the results are divided into four stages:
 
 -   `1.0_prepare_data.R`
